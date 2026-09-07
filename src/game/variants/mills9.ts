@@ -1,0 +1,91 @@
+import { VariantConfig } from '../engine/types';
+
+export const MILLS_9_CONFIG: VariantConfig = {
+  variant: 'MILLS_9',
+  name: "9-Piece Men's Morris",
+  piecesPerPlayer: 9,
+  pointCount: 24,
+  instantWinOnMill: false,
+  allowsFlying: true,
+  flyingPieceThreshold: 3,
+  coordinates: {
+    // Outer square
+    0: { x: 15, y: 15 },
+    1: { x: 50, y: 15 },
+    2: { x: 85, y: 15 },
+    3: { x: 85, y: 50 },
+    4: { x: 85, y: 85 },
+    5: { x: 50, y: 85 },
+    6: { x: 15, y: 85 },
+    7: { x: 15, y: 50 },
+    // Middle square
+    8: { x: 27, y: 27 },
+    9: { x: 50, y: 27 },
+    10: { x: 73, y: 27 },
+    11: { x: 73, y: 50 },
+    12: { x: 73, y: 73 },
+    13: { x: 50, y: 73 },
+    14: { x: 27, y: 73 },
+    15: { x: 27, y: 50 },
+    // Inner square
+    16: { x: 39, y: 39 },
+    17: { x: 50, y: 39 },
+    18: { x: 61, y: 39 },
+    19: { x: 61, y: 50 },
+    20: { x: 61, y: 61 },
+    21: { x: 50, y: 61 },
+    22: { x: 39, y: 61 },
+    23: { x: 39, y: 50 },
+  },
+  adjacency: {
+    // Outer square
+    0: [1, 7],
+    1: [0, 2, 9],
+    2: [1, 3],
+    3: [2, 4, 11],
+    4: [3, 5],
+    5: [4, 6, 13],
+    6: [5, 7],
+    7: [6, 0, 15],
+    // Middle square
+    8: [9, 15],
+    9: [8, 10, 1, 17],
+    10: [9, 11],
+    11: [10, 12, 3, 19],
+    12: [11, 13],
+    13: [12, 14, 5, 21],
+    14: [13, 15],
+    15: [14, 8, 7, 23],
+    // Inner square
+    16: [17, 23],
+    17: [16, 18, 9],
+    18: [17, 19],
+    19: [18, 20, 11],
+    20: [19, 21],
+    21: [20, 22, 13],
+    22: [21, 23],
+    23: [22, 16, 15],
+  },
+  mills: [
+    // Outer square edges
+    [0, 1, 2],
+    [2, 3, 4],
+    [4, 5, 6],
+    [6, 7, 0],
+    // Middle square edges
+    [8, 9, 10],
+    [10, 11, 12],
+    [12, 13, 14],
+    [14, 15, 8],
+    // Inner square edges
+    [16, 17, 18],
+    [18, 19, 20],
+    [20, 21, 22],
+    [22, 23, 16],
+    // Cross lines (midpoint bridges)
+    [1, 9, 17],
+    [3, 11, 19],
+    [5, 13, 21],
+    [7, 15, 23],
+  ],
+};
