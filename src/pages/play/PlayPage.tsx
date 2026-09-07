@@ -37,11 +37,7 @@ export function PlayPage() {
   }, [isSearchingMatch]);
 
   const handleStartGame = () => {
-    if (selectedMode === 'PRIVATE') {
-      // Show private room link
-      return;
-    }
-    setIsSearchingMatch(true);
+    navigate(`/game?variant=${selectedVariant}&time=${selectedTimeControl}&mode=${selectedMode}`);
   };
 
   const handleCopyPrivateLink = () => {

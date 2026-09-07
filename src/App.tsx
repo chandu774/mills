@@ -7,6 +7,7 @@ import { LeaderboardPage } from '@/pages/leaderboard/LeaderboardPage';
 import { FriendsPage } from '@/pages/friends/FriendsPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { RulesPage } from '@/pages/rules/RulesPage';
+import { GamePage } from '@/pages/game/GamePage';
 
 export function App() {
   return (
@@ -14,6 +15,7 @@ export function App() {
       <Route path="/" element={<RootLayout />}>
         <Route index element={<HomePage />} />
         <Route path="play" element={<PlayPage />} />
+        <Route path="game" element={<GamePage />} />
         <Route path="tournaments" element={<TournamentsPage />} />
         <Route path="leaderboard" element={<LeaderboardPage />} />
         <Route path="friends" element={<FriendsPage />} />
