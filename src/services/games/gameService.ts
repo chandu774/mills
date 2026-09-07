@@ -1,0 +1,333 @@
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { GameRoom, RoomPlayer } from './types';
+import { GameVariant, TimeControl, GameMode } from '@/lib/types';
+import { PlayerColor, PlayerMove } from '@/game/engine/types';
+
+const ROOM_STORAGE_PREFIX = 'mills_room_';
+
+export class GameService {
+  /**
+   * Generates a concise 6-character room code like "MILLS-8K2J" or "8K2J4N"
+   */
+  public generateRoomCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  /**
+   * Creates a new game room
+   */
+  public async createRoom(params: {
+    variant: GameVariant;
+    timeControl: TimeControl;
+    mode: GameMode;
+    hostPlayer: Omit<RoomPlayer, 'color' | 'isOnline' | 'connectedAt' | 'lastSeen'> & {
+      preferredColor?: PlayerColor;
+    };
+  }): Promise<GameRoom> {
+    const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const code = this.generateRoomCode();
+    const hostColor = params.hostPlayer.preferredColor || 'WHITE';
+
+    const fullHost: RoomPlayer = {
+      ...params.hostPlayer,
+      color: hostColor,
+      isOnline: true,
+      connectedAt: Date.now(),
+      lastSeen: Date.now(),
+    };
+
+    const room: GameRoom = {
+      id: roomId,
+      code,
+      variant: params.variant,
+      timeControl: params.timeControl,
+      mode: params.mode,
+      status: 'WAITING',
+      hostPlayer: fullHost,
+      spectatorCount: 0,
+      createdAt: Date.now(),
+      moveCount: 0,
+    };
+
+    // Store locally / in-memory
+    this.saveLocalRoom(room);
+
+    // Save to Supabase if configured
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase.from('games').insert({
+          id: roomId,
+          variant: params.variant,
+          time_control: params.timeControl,
+          is_rated: params.mode === 'RANKED',
+          status: 'WAITING',
+          current_fen: '',
+          moves_count: 0,
+          white_player_id: hostColor === 'WHITE' ? fullHost.id : null,
+          black_player_id: hostColor === 'BLACK' ? fullHost.id : null,
+        });
+        if (error) console.warn('[GameService] Supabase room insert notice:', error.message);
+      } catch (err) {
+        console.warn('[GameService] Supabase unavailable, saved locally:', err);
+      }
+    }
+
+    return room;
+  }
+
+  /**
+   * Retrieves a game room by ID or 6-character Code
+   */
+  public async getRoom(roomIdOrCode: string): Promise<GameRoom | null> {
+    // 1. Check local storage first for quick lookup
+    const local = this.getLocalRoom(roomIdOrCode);
+    if (local) return local;
+
+    // 2. Query Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUuid = roomIdOrCode.includes('-');
+        const query = supabase
+          .from('games')
+          .select('*, white:white_player_id(id, username, display_name), black:black_player_id(id, username, display_name)');
+
+        const { data, error } = isUuid
+          ? await query.eq('id', roomIdOrCode).maybeSingle()
+          : await query.or(`id.eq.${roomIdOrCode}`).maybeSingle();
+
+        if (error || !data) return null;
+
+        const hostColor = data.white_player_id ? 'WHITE' : 'BLACK';
+        const hostInfo = hostColor === 'WHITE' ? data.white : data.black;
+
+        return {
+          id: data.id,
+          code: data.id.substring(0, 6).toUpperCase(),
+          variant: data.variant,
+          timeControl: data.time_control,
+          mode: data.is_rated ? 'RANKED' : 'CASUAL',
+          status: data.status,
+          hostPlayer: {
+            id: hostInfo?.id || 'host',
+            displayName: hostInfo?.display_name || hostInfo?.username || 'Player 1',
+            color: hostColor,
+            isOnline: true,
+            connectedAt: new Date(data.created_at).getTime(),
+            lastSeen: Date.now(),
+          },
+          spectatorCount: 0,
+          createdAt: new Date(data.created_at).getTime(),
+          moveCount: data.moves_count || 0,
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Joins an existing game room as guest
+   */
+  public async joinRoom(
+    roomIdOrCode: string,
+    guestPlayer: Omit<RoomPlayer, 'color' | 'isOnline' | 'connectedAt' | 'lastSeen'>
+  ): Promise<{ success: boolean; room?: GameRoom; error?: string }> {
+    const room = await this.getRoom(roomIdOrCode);
+    if (!room) {
+      return { success: false, error: 'Game room not found.' };
+    }
+
+    // If room is already active or finished
+    if (room.status !== 'WAITING') {
+      // If rejoining as same player
+      if (room.hostPlayer.id === guestPlayer.id || room.guestPlayer?.id === guestPlayer.id) {
+        return { success: true, room };
+      }
+      return { success: false, error: 'This room already has 2 active players.' };
+    }
+
+    // Prevent joining against yourself unless in dev demo mode
+    if (room.hostPlayer.id === guestPlayer.id && process.env.NODE_ENV === 'production') {
+      return { success: false, error: 'Cannot join your own room as opponent.' };
+    }
+
+    // Assign opposite color
+    const guestColor: PlayerColor = room.hostPlayer.color === 'WHITE' ? 'BLACK' : 'WHITE';
+    const fullGuest: RoomPlayer = {
+      ...guestPlayer,
+      color: guestColor,
+      isOnline: true,
+      connectedAt: Date.now(),
+      lastSeen: Date.now(),
+    };
+
+    room.guestPlayer = fullGuest;
+    room.status = 'ACTIVE';
+    room.startedAt = Date.now();
+
+    this.saveLocalRoom(room);
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase
+          .from('games')
+          .update({
+            status: 'ACTIVE',
+            started_at: new Date().toISOString(),
+            [guestColor === 'WHITE' ? 'white_player_id' : 'black_player_id']: fullGuest.id,
+          })
+          .eq('id', room.id);
+      } catch (err) {
+        console.warn('[GameService] Failed updating joined player to Supabase:', err);
+      }
+    }
+
+    return { success: true, room };
+  }
+
+  /**
+   * Records a move to the game history
+   */
+  public async recordMove(params: {
+    roomId: string;
+    playerColor: PlayerColor;
+    move: PlayerMove;
+    notation: string;
+    fen: string;
+    moveNumber: number;
+  }): Promise<void> {
+    const room = await this.getRoom(params.roomId);
+    if (room) {
+      room.fen = params.fen;
+      room.moveCount = params.moveNumber;
+      this.saveLocalRoom(room);
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase.from('game_moves').insert({
+          game_id: params.roomId,
+          move_number: params.moveNumber,
+          player_color: params.playerColor,
+          move_type: params.move.type,
+          from_point: 'from' in params.move ? params.move.from : null,
+          to_point: 'to' in params.move ? params.move.to : null,
+          captured_point: 'capturedPoint' in params.move ? params.move.capturedPoint : null,
+          notation: params.notation,
+          fen_after: params.fen,
+        });
+
+        await supabase
+          .from('games')
+          .update({
+            current_fen: params.fen,
+            moves_count: params.moveNumber,
+          })
+          .eq('id', params.roomId);
+      } catch (err) {
+        console.warn('[GameService] Error recording move to Supabase:', err);
+      }
+    }
+  }
+
+  /**
+   * Finalizes the game outcome
+   */
+  public async finishGame(params: {
+    roomId: string;
+    winner: PlayerColor | null;
+    reason: string;
+    finalFen?: string;
+  }): Promise<void> {
+    const room = await this.getRoom(params.roomId);
+    if (room) {
+      room.status = 'FINISHED';
+      room.winner = params.winner;
+      room.winReason = params.reason;
+      room.endedAt = Date.now();
+      if (params.finalFen) room.fen = params.finalFen;
+      this.saveLocalRoom(room);
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const winnerId =
+          params.winner === 'WHITE'
+            ? room?.hostPlayer.color === 'WHITE'
+              ? room.hostPlayer.id
+              : room?.guestPlayer?.id
+            : params.winner === 'BLACK'
+              ? room?.hostPlayer.color === 'BLACK'
+                ? room.hostPlayer.id
+                : room?.guestPlayer?.id
+              : null;
+
+        await supabase
+          .from('games')
+          .update({
+            status: 'FINISHED',
+            winner_id: winnerId,
+            win_reason: params.reason,
+            ended_at: new Date().toISOString(),
+          })
+          .eq('id', params.roomId);
+
+        // If ranked game and both players are registered UUIDs, update ELO ratings
+        if (room?.mode === 'RANKED' && room.guestPlayer) {
+          await supabase.rpc('update_ratings_after_game', {
+            p_game_id: room.id,
+            p_variant: room.variant,
+            p_white_id: room.hostPlayer.color === 'WHITE' ? room.hostPlayer.id : room.guestPlayer.id,
+            p_black_id: room.hostPlayer.color === 'BLACK' ? room.hostPlayer.id : room.guestPlayer.id,
+            p_winner_id: winnerId,
+          });
+        }
+      } catch (err) {
+        console.warn('[GameService] Error finalizing game in Supabase:', err);
+      }
+    }
+  }
+
+  // --- Local/Memory Storage Helpers ---
+
+  private saveLocalRoom(room: GameRoom): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.setItem(ROOM_STORAGE_PREFIX + room.id, JSON.stringify(room));
+        window.localStorage.setItem(ROOM_STORAGE_PREFIX + room.code, JSON.stringify(room));
+      } catch {
+        // storage quota exceeded or disabled
+      }
+    }
+    // Also save in static map for test environments
+    GameService.inMemoryRooms.set(room.id, room);
+    GameService.inMemoryRooms.set(room.code, room);
+  }
+
+  private getLocalRoom(idOrCode: string): GameRoom | null {
+    if (GameService.inMemoryRooms.has(idOrCode)) {
+      return GameService.inMemoryRooms.get(idOrCode)!;
+    }
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const data = window.localStorage.getItem(ROOM_STORAGE_PREFIX + idOrCode);
+        if (data) return JSON.parse(data);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private static inMemoryRooms = new Map<string, GameRoom>();
+}
+
+export const gameService = new GameService();

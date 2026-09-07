@@ -12,6 +12,8 @@ export interface GameControlsProps {
   isGameOver?: boolean;
   currentPlayer: PlayerColor;
   className?: string;
+  isMultiplayer?: boolean;
+  myColor?: PlayerColor;
 }
 
 export function GameControls({
@@ -22,6 +24,8 @@ export function GameControls({
   isGameOver = false,
   currentPlayer,
   className,
+  isMultiplayer,
+  myColor,
 }: GameControlsProps) {
   const [showResignModal, setShowResignModal] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -96,7 +100,7 @@ export function GameControls({
         isOpen={showResignModal}
         onClose={() => setShowResignModal(false)}
         title="Confirm Resignation"
-        description={`Are you sure ${currentPlayer} wants to resign this match? The opponent will be awarded victory.`}
+        description={`Are you sure you want to resign this match? The opponent will be awarded victory.`}
       >
         <div className="flex items-center justify-end gap-3 pt-4">
           <Button variant="secondary" size="md" onClick={() => setShowResignModal(false)}>
@@ -107,7 +111,8 @@ export function GameControls({
             size="md"
             onClick={() => {
               setShowResignModal(false);
-              onResign(currentPlayer);
+              const resigningPlayer = (isMultiplayer && myColor) ? myColor : currentPlayer;
+              onResign(resigningPlayer);
             }}
           >
             Confirm Resign

@@ -89,6 +89,14 @@ export class GameEngine {
     return [...this.history];
   }
 
+  getVariant() {
+    return this.config.variant;
+  }
+
+  getFEN(): string {
+    return `${this.board.toHash()}:${this.state.currentPlayer}:${this.state.status}`;
+  }
+
   /**
    * Core move execution. Handles placing, moving, flying, mill creation, captures, win/draw.
    */

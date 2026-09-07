@@ -6,13 +6,24 @@ export interface TurnStatusBarProps {
   state: GameState;
   selectedPoint: number | null;
   className?: string;
+  isTurnEnforced?: boolean;
 }
 
-export function TurnStatusBar({ state, selectedPoint, className }: TurnStatusBarProps) {
+export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced }: TurnStatusBarProps) {
   const { currentPlayer, status, phase, piecesPlaced, variant } = state;
   const isWhite = currentPlayer === 'WHITE';
 
   const getInstruction = () => {
+    if (isTurnEnforced && !['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(status)) {
+      return {
+        icon: Swords,
+        title: "Opponent's turn",
+        subtitle: `Waiting for ${currentPlayer.toLowerCase()} to play...`,
+        theme: 'bg-background-elevated border-background-border text-slate-300',
+        iconColor: 'text-slate-400',
+      };
+    }
+
     if (status === 'CAPTURE_PENDING') {
       return {
         icon: Target,

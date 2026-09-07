@@ -25,6 +25,8 @@ export interface Move {
   capturedPoint?: number;
 }
 
+export type PlayerMove = Move;
+
 export interface GameState {
   variant: GameVariant;
   status: GameStatus;

@@ -15,6 +15,7 @@ export interface PlayerBarProps {
   capturedCount: number;
   timeRemainingSeconds?: number;
   isCompact?: boolean;
+  isOnline?: boolean;
 }
 
 export function PlayerBar({
@@ -28,6 +29,7 @@ export function PlayerBar({
   capturedCount,
   timeRemainingSeconds,
   isCompact = false,
+  isOnline,
 }: PlayerBarProps) {
   const isWhite = color === 'WHITE';
 
@@ -67,6 +69,15 @@ export function PlayerBar({
             <span className={cn("font-bold text-sm", isTurn ? "text-white" : "text-slate-300")}>
               {username}
             </span>
+            {isOnline !== undefined && (
+              <span
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  isOnline ? "bg-emerald-500 shadow-sm shadow-emerald-500/50" : "bg-rose-500 animate-pulse"
+                )}
+                title={isOnline ? "Online" : "Disconnected"}
+              />
+            )}
             <RatingBadge rating={rating} size="sm" />
           </div>
           <p className="text-[11px] text-slate-400">{displayName}</p>

@@ -51,6 +51,8 @@ export function formatMode(mode: GameMode): string {
       return 'Play Friend';
     case 'PRIVATE':
       return 'Private Room';
+    case 'LOCAL':
+      return 'Pass & Play';
   }
 }
 
