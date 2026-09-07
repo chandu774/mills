@@ -1,12 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import { Bell, BookOpen } from 'lucide-react';
 
+import { useAuth } from '@/hooks/useAuth';
+import { LogIn } from 'lucide-react';
+
 export interface MobileHeaderProps {
   onOpenNotifications: () => void;
+  onOpenAuth: () => void;
   unreadNotificationsCount?: number;
 }
 
-export function MobileHeader({ onOpenNotifications, unreadNotificationsCount = 2 }: MobileHeaderProps) {
+export function MobileHeader({ onOpenNotifications, onOpenAuth, unreadNotificationsCount = 2 }: MobileHeaderProps) {
+  const { user, profile } = useAuth();
   return (
     <header className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-background-border pt-safe px-4 py-3 flex items-center justify-between select-none">
       <NavLink to="/" className="flex items-center gap-2">
@@ -42,6 +47,23 @@ export function MobileHeader({ onOpenNotifications, unreadNotificationsCount = 2
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
           )}
         </button>
+
+        {user ? (
+          <NavLink
+            to="/profile"
+            className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs border border-primary/30"
+          >
+            {profile?.displayName?.[0] || 'U'}
+          </NavLink>
+        ) : (
+          <button
+            onClick={onOpenAuth}
+            aria-label="Sign In"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-background-card"
+          >
+            <LogIn className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </header>
   );

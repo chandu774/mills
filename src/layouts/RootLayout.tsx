@@ -4,6 +4,7 @@ import { DesktopSidebar } from '@/components/layout/DesktopSidebar';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { NotificationModal } from '@/components/layout/NotificationModal';
+import { AuthModal } from '@/components/auth/AuthModal';
 import { usePWA } from '@/hooks/usePWA';
 import { AppNotification } from '@/lib/types';
 import { WifiOff, Download } from 'lucide-react';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/Button';
 export function RootLayout() {
   const { isOnline, isInstallable, installApp } = usePWA();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Sample platform notifications for Phase 1
   const [notifications, setNotifications] = useState<AppNotification[]>([
@@ -60,12 +62,14 @@ export function RootLayout() {
       {/* Desktop Left Sidebar */}
       <DesktopSidebar
         onOpenNotifications={() => setIsNotificationOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
         unreadNotificationsCount={unreadCount}
       />
 
       {/* Mobile Top Header */}
       <MobileHeader
         onOpenNotifications={() => setIsNotificationOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
         unreadNotificationsCount={unreadCount}
       />
 
@@ -99,6 +103,12 @@ export function RootLayout() {
         onClose={() => setIsNotificationOpen(false)}
         notifications={notifications}
         onMarkAllRead={handleMarkAllRead}
+      />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
       />
     </div>
   );

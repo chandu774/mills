@@ -8,22 +8,25 @@ import { FriendsPage } from '@/pages/friends/FriendsPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 import { RulesPage } from '@/pages/rules/RulesPage';
 import { GamePage } from '@/pages/game/GamePage';
+import { AuthProvider } from '@/context/AuthContext';
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/" element={<RootLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="play" element={<PlayPage />} />
-        <Route path="game" element={<GamePage />} />
-        <Route path="tournaments" element={<TournamentsPage />} />
-        <Route path="leaderboard" element={<LeaderboardPage />} />
-        <Route path="friends" element={<FriendsPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="rules" element={<RulesPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<RootLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="play" element={<PlayPage />} />
+          <Route path="game" element={<GamePage />} />
+          <Route path="tournaments" element={<TournamentsPage />} />
+          <Route path="leaderboard" element={<LeaderboardPage />} />
+          <Route path="friends" element={<FriendsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="rules" element={<RulesPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
 

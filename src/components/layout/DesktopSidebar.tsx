@@ -3,12 +3,17 @@ import { Home, Play, Trophy, BarChart2, Users, BookOpen, User, Bell } from 'luci
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 
+import { useAuth } from '@/hooks/useAuth';
+import { LogIn, LogOut } from 'lucide-react';
+
 export interface DesktopSidebarProps {
   onOpenNotifications: () => void;
+  onOpenAuth: () => void;
   unreadNotificationsCount?: number;
 }
 
-export function DesktopSidebar({ onOpenNotifications, unreadNotificationsCount = 2 }: DesktopSidebarProps) {
+export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotificationsCount = 2 }: DesktopSidebarProps) {
+  const { user, profile, ratings, signOut } = useAuth();
   const navItems = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/play', label: 'Play', icon: Play },
@@ -106,16 +111,48 @@ export function DesktopSidebar({ onOpenNotifications, unreadNotificationsCount =
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-background-card border border-background-border">
             <span className="text-slate-400">3 Mills</span>
-            <span className="font-mono font-bold text-emerald-400">1247</span>
+            <span className="font-mono font-bold text-emerald-400">{ratings?.mills3 || 1200}</span>
           </div>
           <div className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-background-card border border-background-border">
             <span className="text-slate-400">6 Mills</span>
-            <span className="font-mono font-bold text-sky-400">1382</span>
+            <span className="font-mono font-bold text-sky-400">{ratings?.mills6 || 1200}</span>
           </div>
           <div className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-background-card border border-background-border">
             <span className="text-slate-400">9 Mills</span>
-            <span className="font-mono font-bold text-amber-400">1516</span>
+            <span className="font-mono font-bold text-amber-400">{ratings?.mills9 || 1200}</span>
           </div>
+        </div>
+
+        {/* User Account Button */}
+        <div className="pt-3 mt-3 border-t border-background-border">
+          {user ? (
+            <div className="flex items-center justify-between">
+              <NavLink to="/profile" className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">
+                  {profile?.displayName?.[0] || 'U'}
+                </div>
+                <span className="text-xs font-bold text-slate-200 truncate">
+                  {profile?.displayName || 'Player'}
+                </span>
+              </NavLink>
+              <button
+                onClick={() => signOut()}
+                title="Sign Out"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-background-elevated transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onOpenAuth}
+              className="w-full gap-2 text-xs font-bold"
+            >
+              <LogIn className="h-3.5 w-3.5" /> Sign In / Join
+            </Button>
+          )}
         </div>
       </div>
     </aside>
