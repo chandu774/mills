@@ -111,17 +111,17 @@ export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced 
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border transition-all text-left shadow-soft select-none",
+        "flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border transition-all text-left shadow-soft select-none",
         instruction.theme,
         className
       )}
     >
-      <div className={cn("p-1.5 sm:p-2 rounded-xl shrink-0", instruction.iconColor)}>
-        <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+      <div className={cn("p-1 sm:p-1.5 rounded-lg sm:rounded-xl shrink-0", instruction.iconColor)}>
+        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       </div>
       <div className="min-w-0 flex-1">
         <h4 className="text-xs sm:text-sm font-bold truncate text-ink">{instruction.title}</h4>
-        <p className="text-[11px] sm:text-xs text-ink-muted truncate mt-0.5">{instruction.subtitle}</p>
+        <p className="text-[10px] sm:text-xs text-ink-muted truncate mt-0.5">{instruction.subtitle}</p>
       </div>
     </div>
   );

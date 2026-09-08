@@ -131,13 +131,17 @@ export function MillsBoard({
     return Boolean(state.lastMillPoints && state.lastMillPoints.includes(pointIndex));
   };
 
+  // Calibrated piece and touch dimensions per variant to prevent intersection collision
+  const pieceRadius = config.variant === 'MILLS_9' ? 3.9 : config.variant === 'MILLS_6' ? 4.2 : 4.6;
+  const hitRadius = config.variant === 'MILLS_9' ? 5.2 : config.variant === 'MILLS_6' ? 6.2 : 7.2;
+
   return (
-    <div className={cn("relative w-full max-w-[560px] aspect-square select-none mx-auto", className)}>
+    <div className={cn("relative w-full max-w-[min(100vw-16px,440px)] md:max-w-[540px] aspect-square select-none mx-auto", className)}>
       {/* Outer physical wood board container with soft natural shadow */}
-      <div className="w-full h-full p-2.5 sm:p-3 rounded-[28px] sm:rounded-[36px] bg-gradient-to-b from-[#4A321E] via-[#382313] to-[#25150A] shadow-board border-4 sm:border-[6px] border-[#2C190D]">
+      <div className="w-full h-full p-1.5 sm:p-2.5 rounded-[22px] sm:rounded-[36px] bg-gradient-to-b from-[#4A321E] via-[#382313] to-[#25150A] shadow-board border-[3.5px] sm:border-[6px] border-[#2C190D]">
         <svg
           viewBox="0 0 100 100"
-          className="w-full h-full rounded-[20px] sm:rounded-[26px] overflow-hidden"
+          className="w-full h-full rounded-[16px] sm:rounded-[26px] overflow-hidden"
           role="grid"
           aria-label={`${config.name} Board`}
         >
@@ -268,17 +272,17 @@ export function MillsBoard({
                   <g>
                     <circle
                       cx={coord.x}
-                      cy={coord.y + 0.3}
-                      r="2.2"
+                      cy={coord.y + 0.25}
+                      r={config.variant === 'MILLS_9' ? '1.8' : '2.1'}
                       fill="#1A0D06"
                     />
                     <circle
                       cx={coord.x}
                       cy={coord.y}
-                      r="1.9"
+                      r={config.variant === 'MILLS_9' ? '1.6' : '1.8'}
                       fill="#8C6544"
                       stroke="#2C190D"
-                      strokeWidth="0.6"
+                      strokeWidth="0.5"
                     />
                   </g>
                 )}
@@ -289,16 +293,16 @@ export function MillsBoard({
                     <circle
                       cx={coord.x}
                       cy={coord.y}
-                      r="4.2"
-                      fill="rgba(46, 90, 58, 0.28)"
+                      r={pieceRadius * 1.08}
+                      fill="rgba(46, 90, 58, 0.25)"
                       stroke="#2E5A3A"
-                      strokeWidth="1.2"
+                      strokeWidth="1.1"
                       className="animate-pulse"
                     />
                     <circle
                       cx={coord.x}
                       cy={coord.y}
-                      r="2.2"
+                      r={pieceRadius * 0.45}
                       fill="#2E5A3A"
                     />
                   </g>
@@ -310,6 +314,7 @@ export function MillsBoard({
                     color={piece as PlayerColor}
                     cx={coord.x}
                     cy={coord.y}
+                    radius={pieceRadius}
                     isSelected={isSelected}
                     isEligibleCapture={isEligibleCapture}
                     isMillPiece={inActiveMill}
@@ -318,11 +323,11 @@ export function MillsBoard({
                   />
                 )}
 
-                {/* Large Invisible Hit Area for Ergonomic Touch (Min 48px equivalent) */}
+                {/* Invisible Hit Area for Ergonomic Touch (Non-overlapping, safe touch) */}
                 <circle
                   cx={coord.x}
                   cy={coord.y}
-                  r="7.5"
+                  r={hitRadius}
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={() => !disabled && onPointClick(pointIndex)}

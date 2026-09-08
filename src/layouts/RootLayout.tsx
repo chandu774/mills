@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar';
 import { MobileHeader } from '@/components/layout/MobileHeader';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
@@ -9,8 +9,11 @@ import { usePWA } from '@/hooks/usePWA';
 import { AppNotification } from '@/lib/types';
 import { WifiOff, Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 export function RootLayout() {
+  const location = useLocation();
+  const isGameRoute = location.pathname.startsWith('/game');
   const { isOnline, isInstallable, installApp } = usePWA();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -66,17 +69,19 @@ export function RootLayout() {
         unreadNotificationsCount={unreadCount}
       />
 
-      {/* Mobile Top Header */}
-      <MobileHeader
-        onOpenNotifications={() => setIsNotificationOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        unreadNotificationsCount={unreadCount}
-      />
+      {/* Mobile Top Header: Hidden on active game screen to maximize board view & avoid duplicate headers */}
+      {!isGameRoute && (
+        <MobileHeader
+          onOpenNotifications={() => setIsNotificationOpen(true)}
+          onOpenAuth={() => setIsAuthOpen(true)}
+          unreadNotificationsCount={unreadCount}
+        />
+      )}
 
       {/* Main View Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto min-h-screen">
         {/* PWA Install Banner */}
-        {isInstallable && (
+        {isInstallable && !isGameRoute && (
           <div className="bg-primary-subtle border-b border-primary/20 px-4 py-2 flex items-center justify-between text-xs text-primary font-medium">
             <div className="flex items-center gap-2">
               <Download className="h-4 w-4" />
@@ -89,13 +94,20 @@ export function RootLayout() {
         )}
 
         {/* Dynamic Page Router Outlet */}
-        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto pb-safe-nav md:pb-8">
+        <main
+          className={cn(
+            "flex-1 w-full mx-auto",
+            isGameRoute
+              ? "px-2 py-1.5 sm:px-3 sm:py-3 md:p-6 max-w-7xl pb-4 md:pb-8"
+              : "p-4 md:p-8 max-w-7xl pb-safe-nav md:pb-8"
+          )}
+        >
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      {/* Mobile Bottom Navigation: Hidden on active game screen to prevent accidental navigation & give board full height */}
+      {!isGameRoute && <MobileBottomNav />}
 
       {/* Notifications Dialog */}
       <NotificationModal

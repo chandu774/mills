@@ -32,16 +32,16 @@ export function GameControls({
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between gap-2 p-1.5 sm:p-2 rounded-2xl bg-white/90 border border-background-border/80 shadow-soft">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-white/95 border border-background-border shadow-soft">
+        <div className="flex items-center gap-0.5 sm:gap-1">
           {/* Flip Perspective */}
           <button
             onClick={onFlipBoard}
             aria-label="Flip board perspective"
             title="Flip Board"
-            className="p-2 sm:p-2.5 rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated transition-colors cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated active:scale-95 transition-all cursor-pointer"
           >
-            <ArrowUpDown className="h-4 w-4" />
+            <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
 
           {/* Sound Mute Toggle */}
@@ -49,19 +49,19 @@ export function GameControls({
             onClick={() => setIsMuted(!isMuted)}
             aria-label={isMuted ? "Unmute sound" : "Mute sound"}
             title={isMuted ? "Unmute" : "Mute"}
-            className="p-2 sm:p-2.5 rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated transition-colors cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated active:scale-95 transition-all cursor-pointer"
           >
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            {isMuted ? <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {isGameOver && onRestartGame ? (
             <Button
               size="sm"
               variant="primary"
               onClick={onRestartGame}
-              className="text-xs gap-1.5 h-8.5 sm:h-9 font-bold"
+              className="text-xs gap-1.5 h-8 sm:h-8.5 font-bold px-3"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Rematch
             </Button>
@@ -73,7 +73,7 @@ export function GameControls({
                 variant="outline"
                 onClick={onOfferDraw}
                 disabled={isGameOver}
-                className="text-xs gap-1.5 h-8.5 sm:h-9 font-medium border-background-border text-ink hover:bg-background-subtle"
+                className="text-xs gap-1 sm:gap-1.5 h-8 sm:h-8.5 px-2 sm:px-2.5 font-medium border-background-border text-ink hover:bg-background-subtle"
               >
                 <Handshake className="h-3.5 w-3.5 text-ink-muted" />
                 <span>Draw</span>
@@ -85,7 +85,7 @@ export function GameControls({
                 variant="danger"
                 onClick={() => setShowResignModal(true)}
                 disabled={isGameOver}
-                className="text-xs gap-1.5 h-8.5 sm:h-9 font-semibold"
+                className="text-xs gap-1 sm:gap-1.5 h-8 sm:h-8.5 px-2 sm:px-2.5 font-semibold"
               >
                 <Flag className="h-3.5 w-3.5" />
                 <span>Resign</span>

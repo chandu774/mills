@@ -147,35 +147,19 @@ export function GamePage() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [engineState.currentPlayer, isGameOver, initialSeconds, isMultiplayer, connectionStatus]);
+  }, [isGameOver, initialSeconds, isMultiplayer, connectionStatus, engineState.currentPlayer]);
 
-  // Show Game Over modal when finished
-  useEffect(() => {
-    if (isGameOver) {
-      setShowGameOverModal(true);
-    }
-  }, [isGameOver]);
-
-  // Handle Point Click on Board
+  // Handle board intersection click
   const handlePointClick = (pointIndex: number) => {
-    // If in review mode, exit review first
-    if (currentReplayIndex !== null) {
-      setCurrentReplayIndex(null);
-    }
-
-    if (isGameOver) return;
-
-    // In multiplayer mode, player can only move when it is their turn!
-    if (isMultiplayer) {
-      if (!isMyTurn) return;
-    }
+    if (isGameOver || currentReplayIndex !== null) return;
+    if (isMultiplayer && (!isMyTurn || connectionStatus === 'WAITING')) return;
 
     const engine = engineRef.current;
     const state = engine.getState();
     const clickedPiece = state.board[pointIndex];
     const isOwnPiece = clickedPiece === state.currentPlayer;
 
-    // 1. Capture mode
+    // 1. Capture pending phase
     if (state.status === 'CAPTURE_PENDING') {
       const move = {
         type: 'CAPTURE' as const,
@@ -342,26 +326,28 @@ export function GamePage() {
     : undefined;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4 animate-in fade-in duration-200">
-      {/* Top Header Bar: Clean & Minimal */}
-      <div className="flex items-center justify-between pb-2 border-b border-background-border">
+    <div className="max-w-6xl mx-auto space-y-2 sm:space-y-4 animate-in fade-in duration-200">
+      {/* Top Header Bar: Clean & Minimal (Single header, no duplicate on mobile) */}
+      <div className="flex items-center justify-between pb-1.5 sm:pb-2 border-b border-background-border gap-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/play')}
-          className="gap-2 text-xs font-semibold text-ink-muted hover:text-ink"
+          className="gap-1 px-2 sm:px-3 text-xs font-semibold text-ink-muted hover:text-ink shrink-0 h-8 sm:h-9"
         >
-          <ArrowLeft className="h-4 w-4" /> Leave Game
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden xs:inline">Leave Game</span>
+          <span className="xs:hidden">Leave</span>
         </Button>
 
-        <div className="text-center">
-          <h2 className="text-sm font-bold text-ink tracking-wide">
+        <div className="text-center min-w-0">
+          <h2 className="text-xs sm:text-sm font-bold text-ink tracking-wide truncate">
             {engineRef.current.config.name}
           </h2>
-          <p className="text-[11px] text-ink-subtle font-mono">
+          <p className="text-[10px] sm:text-[11px] text-ink-subtle font-mono truncate">
             {isMultiplayer ? (
               <span className="text-primary font-semibold">
-                Online Match • Room: {room?.code || roomIdParam}
+                Online • Room: {room?.code || roomIdParam}
               </span>
             ) : (
               `Pass & Play • ${timeParam.replace('_', ' ')}`
@@ -374,13 +360,13 @@ export function GamePage() {
             variant="outline"
             size="sm"
             onClick={handleCopyRoomLink}
-            className="gap-1.5 text-xs border-background-border text-ink"
+            className="gap-1 px-2 sm:px-2.5 text-xs border-background-border text-ink shrink-0 h-8 sm:h-9"
           >
             {copiedLink ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-            <span>{copiedLink ? 'Copied' : 'Share'}</span>
+            <span className="hidden xs:inline">{copiedLink ? 'Copied' : 'Share'}</span>
           </Button>
         ) : (
-          <div className="w-16" />
+          <div className="w-12 sm:w-16" />
         )}
       </div>
 
@@ -389,15 +375,15 @@ export function GamePage() {
         <div className="space-y-2">
           {/* Waiting for Opponent Banner */}
           {connectionStatus === 'WAITING' && (
-            <div className="p-3.5 rounded-2xl bg-gold-light border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-ink">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
-                  <Users className="h-5 w-5 text-gold animate-pulse" />
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-gold-light border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-ink">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gold/20 flex items-center justify-center shrink-0">
+                  <Users className="h-4 w-4 text-gold animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-ink">Waiting for opponent to join...</h3>
-                  <p className="text-xs text-ink-muted">
-                    Share Room Code <strong className="font-mono text-ink text-sm bg-white px-2 py-0.5 rounded border border-gold/40">{room?.code || roomIdParam}</strong> or copy link.
+                  <h3 className="font-bold text-xs sm:text-sm text-ink">Waiting for opponent to join...</h3>
+                  <p className="text-[11px] text-ink-muted">
+                    Room Code: <strong className="font-mono text-ink bg-white px-1.5 py-0.5 rounded border border-gold/40">{room?.code || roomIdParam}</strong>
                   </p>
                 </div>
               </div>
@@ -405,22 +391,22 @@ export function GamePage() {
                 variant="amber"
                 size="sm"
                 onClick={handleCopyRoomLink}
-                className="w-full sm:w-auto gap-1.5 text-xs font-bold"
+                className="w-full sm:w-auto gap-1 text-xs font-bold h-8"
               >
-                {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                Copy Invite Link
+                {copiedLink ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                Copy Link
               </Button>
             </div>
           )}
 
           {/* Opponent Disconnect Grace Timer Banner */}
           {disconnectCountdown !== null && disconnectCountdown > 0 && (
-            <div className="p-3.5 rounded-2xl bg-red-50 border border-alert-danger/40 flex items-center justify-between text-alert-danger animate-pulse">
-              <div className="flex items-center gap-2.5">
-                <WifiOff className="h-5 w-5" />
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-red-50 border border-alert-danger/40 flex items-center justify-between text-alert-danger animate-pulse">
+              <div className="flex items-center gap-2">
+                <WifiOff className="h-4 w-4 shrink-0" />
                 <div>
-                  <span className="font-bold text-sm">Opponent disconnected</span>
-                  <p className="text-xs text-ink-muted">
+                  <span className="font-bold text-xs sm:text-sm">Opponent disconnected</span>
+                  <p className="text-[10px] sm:text-xs text-ink-muted">
                     Auto-forfeiting in <strong>{disconnectCountdown}s</strong> if they do not reconnect...
                   </p>
                 </div>
@@ -430,16 +416,16 @@ export function GamePage() {
 
           {/* Incoming Draw Offer Banner */}
           {incomingDrawOffer && (
-            <div className="p-3.5 rounded-2xl bg-[#F2F7F4] border border-primary/30 flex items-center justify-between gap-3 text-ink">
-              <div className="flex items-center gap-2.5">
-                <Handshake className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-sm">Opponent has offered a draw.</span>
-              </div>
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-[#F2F7F4] border border-primary/30 flex items-center justify-between gap-2 text-ink">
               <div className="flex items-center gap-2">
-                <Button variant="primary" size="sm" onClick={() => respondToDraw(true)}>
-                  Accept Draw
+                <Handshake className="h-4 w-4 text-primary shrink-0" />
+                <span className="font-semibold text-xs sm:text-sm">Opponent offered a draw.</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button variant="primary" size="sm" onClick={() => respondToDraw(true)} className="h-7 text-xs">
+                  Accept
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => respondToDraw(false)}>
+                <Button variant="outline" size="sm" onClick={() => respondToDraw(false)} className="h-7 text-xs">
                   Decline
                 </Button>
               </div>
@@ -448,7 +434,7 @@ export function GamePage() {
 
           {/* Outgoing Draw Offer Banner */}
           {outgoingDrawOffer && (
-            <div className="p-3 rounded-2xl bg-white border border-background-border flex items-center gap-2.5 text-xs text-ink-muted">
+            <div className="p-2.5 rounded-2xl bg-white border border-background-border flex items-center gap-2 text-xs text-ink-muted">
               <Handshake className="h-4 w-4 text-primary animate-pulse" />
               <span>Draw offer sent to opponent. Awaiting response...</span>
             </div>
@@ -456,16 +442,17 @@ export function GamePage() {
 
           {/* Incoming Rematch Offer Banner */}
           {incomingRematchOffer && (
-            <div className="p-3.5 rounded-2xl bg-[#F2F7F4] border border-primary/30 flex items-center justify-between gap-3 text-ink">
-              <div className="flex items-center gap-2.5">
-                <RotateCcw className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-sm">Opponent wants a rematch!</span>
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-[#F2F7F4] border border-primary/30 flex items-center justify-between gap-2 text-ink">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="h-4 w-4 text-primary shrink-0" />
+                <span className="font-semibold text-xs sm:text-sm">Opponent wants a rematch!</span>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => acceptRematch(`room_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`)}
+                  className="h-7 text-xs font-bold"
                 >
                   Accept Rematch
                 </Button>
@@ -475,7 +462,7 @@ export function GamePage() {
 
           {/* Outgoing Rematch Offer Banner */}
           {outgoingRematchOffer && (
-            <div className="p-3 rounded-2xl bg-white border border-background-border flex items-center gap-2.5 text-xs text-ink-muted">
+            <div className="p-2.5 rounded-2xl bg-white border border-background-border flex items-center gap-2 text-xs text-ink-muted">
               <RotateCcw className="h-4 w-4 text-primary animate-pulse" />
               <span>Rematch offer sent to opponent. Awaiting response...</span>
             </div>
@@ -622,9 +609,10 @@ export function GamePage() {
       </div>
 
       {/* =========================================================================
-          MOBILE GAME LAYOUT (Intentional Vertical Rhythm: Board Dominant)
+          MOBILE GAME LAYOUT (Board Dominant, Zero Desktop Clutter)
+          Calibrated specifically for 320px, 360px, 375px, 390px, 430px screens
           ========================================================================= */}
-      <div className="md:hidden flex flex-col space-y-2.5 pb-6">
+      <div className="md:hidden flex flex-col space-y-1.5 xs:space-y-2 pb-4 max-w-[440px] mx-auto w-full">
         {/* 1. Opponent Bar */}
         <PlayerBar
           color={topColor}
@@ -641,8 +629,8 @@ export function GamePage() {
           isCompact
         />
 
-        {/* 2. Dominant Large Board (Maximal Practical Area) */}
-        <div className="py-1 flex justify-center">
+        {/* 2. Dominant Large Board (Hero attraction with maximum screen presence) */}
+        <div className="py-0.5 flex justify-center">
           <MillsBoard
             config={engineRef.current.config}
             state={displayedState}
@@ -681,7 +669,7 @@ export function GamePage() {
           isTurnEnforced={isMultiplayer && !isMyTurn}
         />
 
-        {/* 5. Game Action Controls (Draw, Resign, Flip, Mute) */}
+        {/* 5. Game Action Controls (Flip, Sound, Draw, Resign / Rematch) */}
         <GameControls
           onResign={handleResign}
           onOfferDraw={handleOfferDraw}
@@ -693,30 +681,30 @@ export function GamePage() {
           myColor={myColor === 'SPECTATOR' ? undefined : myColor}
         />
 
-        {/* 6. Compact Mobile Tabs: Moves | Info | Rules (Opens in Bottom Sheet Drawer) */}
-        <div className="grid grid-cols-3 gap-2 pt-1">
+        {/* 6. Secondary In-Game Drawer Controls: Moves | Game Info | Rules */}
+        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
           <button
             onClick={() => setMobileDrawerTab('moves')}
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white border border-background-border text-xs font-semibold text-ink-muted hover:text-ink shadow-2xs cursor-pointer"
+            className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-white border border-background-border text-[11px] font-semibold text-ink-muted hover:text-ink active:bg-background-elevated shadow-2xs transition-colors cursor-pointer"
           >
-            <History className="h-3.5 w-3.5 text-primary" />
-            <span>Moves ({engineRef.current.getHistory().length})</span>
+            <History className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="truncate">Moves ({engineRef.current.getHistory().length})</span>
           </button>
 
           <button
             onClick={() => setMobileDrawerTab('info')}
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white border border-background-border text-xs font-semibold text-ink-muted hover:text-ink shadow-2xs cursor-pointer"
+            className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-white border border-background-border text-[11px] font-semibold text-ink-muted hover:text-ink active:bg-background-elevated shadow-2xs transition-colors cursor-pointer"
           >
-            <Info className="h-3.5 w-3.5 text-gold" />
-            <span>Game Info</span>
+            <Info className="h-3.5 w-3.5 text-gold shrink-0" />
+            <span className="truncate">Game Info</span>
           </button>
 
           <button
             onClick={() => setMobileDrawerTab('rules')}
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white border border-background-border text-xs font-semibold text-ink-muted hover:text-ink shadow-2xs cursor-pointer"
+            className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-white border border-background-border text-[11px] font-semibold text-ink-muted hover:text-ink active:bg-background-elevated shadow-2xs transition-colors cursor-pointer"
           >
-            <BookOpen className="h-3.5 w-3.5 text-primary" />
-            <span>Rules</span>
+            <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="truncate">Rules</span>
           </button>
         </div>
       </div>

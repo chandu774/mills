@@ -44,20 +44,20 @@ export function PlayerBar({
   return (
     <div
       className={cn(
-        "flex items-center justify-between px-3.5 py-2 sm:py-2.5 rounded-2xl border transition-all select-none",
+        "flex items-center justify-between px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl border transition-all select-none gap-1.5 sm:gap-2",
         isTurn
           ? "bg-[#F3F8F4] border-primary/40 shadow-soft ring-1.5 ring-primary/30"
           : "bg-white/95 border-background-border/90 text-ink-muted shadow-soft"
       )}
     >
       {/* Left: Player Identity & Color Badge */}
-      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
         <div className="relative shrink-0">
           <Avatar src={avatarUrl} name={username} size={isCompact ? 'sm' : 'md'} />
           {/* Tactile piece color marker dot */}
           <span
             className={cn(
-              "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm",
+              "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-white shadow-2xs",
               isWhite ? "bg-[#FAF7F2] ring-1 ring-[#D4C7B5]" : "bg-[#2A170B] ring-1 ring-[#4A321E]"
             )}
             title={`${color} pieces`}
@@ -65,14 +65,14 @@ export function PlayerBar({
         </div>
 
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className={cn("font-bold text-xs sm:text-sm truncate", isTurn ? "text-ink" : "text-ink-muted")}>
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <span className={cn("font-bold text-xs sm:text-sm truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[150px]", isTurn ? "text-ink" : "text-ink-muted")}>
               {username}
             </span>
             {isOnline !== undefined && (
               <span
                 className={cn(
-                  "w-2 h-2 rounded-full shrink-0",
+                  "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0",
                   isOnline ? "bg-primary" : "bg-alert-danger animate-pulse"
                 )}
                 title={isOnline ? "Online" : "Disconnected"}
@@ -80,15 +80,16 @@ export function PlayerBar({
             )}
             <RatingBadge rating={rating} size="sm" />
           </div>
-          <p className="text-[11px] text-ink-subtle truncate">{displayName}</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-subtle truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[150px] hidden xs:block">{displayName}</p>
         </div>
       </div>
 
-      {/* Center: Unplaced Chips & Captured Pieces */}
-      <div className="flex flex-col items-center gap-1 shrink-0 px-2">
+      {/* Center: Unplaced Chips & Captured Pieces (Sized compactly for mobile) */}
+      <div className="flex flex-col items-center gap-0.5 shrink-0 px-1 sm:px-2">
         {unplacedCount > 0 && (
           <div className="flex items-center gap-1" title={`${unplacedCount} pieces remaining to place`}>
-            {Array.from({ length: Math.min(unplacedCount, 9) }).map((_, i) => (
+            {/* Show up to 4 dots + count tag on small screen to save space */}
+            {Array.from({ length: Math.min(unplacedCount, 4) }).map((_, i) => (
               <span
                 key={i}
                 className={cn(
@@ -97,14 +98,18 @@ export function PlayerBar({
                 )}
               />
             ))}
-            {unplacedCount > 9 && <span className="text-[10px] text-ink-subtle font-mono">+{unplacedCount - 9}</span>}
+            {unplacedCount > 4 && (
+              <span className="text-[10px] font-mono font-bold text-ink-muted">
+                +{unplacedCount - 4}
+              </span>
+            )}
           </div>
         )}
 
         {capturedCount > 0 && (
-          <div className="flex items-center gap-1 text-[11px] text-ink-subtle">
+          <div className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-ink-subtle">
             <span className="font-bold text-alert-danger">+{capturedCount}</span>
-            <span>captured</span>
+            <span className="hidden sm:inline">captured</span>
           </div>
         )}
       </div>
@@ -113,7 +118,7 @@ export function PlayerBar({
       {timeRemainingSeconds !== undefined && (
         <div
           className={cn(
-            "flex items-center gap-1.5 font-mono px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border font-bold text-xs sm:text-sm min-w-[72px] sm:min-w-[80px] justify-center transition-all shrink-0",
+            "flex items-center gap-1 font-mono px-2 sm:px-2.5 py-1 rounded-xl border font-bold text-xs sm:text-sm min-w-[60px] sm:min-w-[74px] justify-center transition-all shrink-0",
             isTurn
               ? isLowTime
                 ? "bg-red-50 text-alert-danger border-alert-danger/40 animate-pulse"
@@ -121,7 +126,7 @@ export function PlayerBar({
               : "bg-background-elevated text-ink-subtle border-background-border/60"
           )}
         >
-          <Clock className="h-3.5 w-3.5 opacity-60 shrink-0" />
+          <Clock className="h-3 w-3 opacity-60 shrink-0" />
           <span>{formatClock(timeRemainingSeconds)}</span>
         </div>
       )}
