@@ -169,33 +169,27 @@ export function MillsBoard({
         >
           <defs>
             {/* Natural Teak Wood Surface Radial Gradient */}
-            <radialGradient id="teakWoodGradient" cx="46%" cy="40%" r="76%">
-              <stop offset="0%" stopColor="#AD7A48" />
-              <stop offset="35%" stopColor="#966536" />
-              <stop offset="70%" stopColor="#805128" />
-              <stop offset="100%" stopColor="#683F1C" />
+            <radialGradient id="teakWoodGradient" cx="48%" cy="44%" r="72%">
+              <stop offset="0%" stopColor="#A87444" />
+              <stop offset="35%" stopColor="#925E31" />
+              <stop offset="70%" stopColor="#794820" />
+              <stop offset="100%" stopColor="#5E3314" />
             </radialGradient>
 
             {/* Top-to-Bottom Subtle Wood Lighting Gradient */}
             <linearGradient id="teakPlankLighting" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255, 235, 205, 0.09)" />
+              <stop offset="0%" stopColor="rgba(255, 240, 215, 0.08)" />
               <stop offset="50%" stopColor="rgba(0, 0, 0, 0)" />
-              <stop offset="100%" stopColor="rgba(35, 15, 5, 0.12)" />
+              <stop offset="100%" stopColor="rgba(30, 12, 4, 0.14)" />
             </linearGradient>
 
-            {/* Subtle Wood Grain Noise Filter */}
-            <filter id="teakWoodGrain" x="0%" y="0%" width="100%" height="100%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.035 0.75" numOctaves="3" result="noise" />
-              <feColorMatrix
-                type="matrix"
-                values="0 0 0 0 0.45
-                        0 0 0 0 0.28
-                        0 0 0 0 0.14
-                        0 0 0 0 0.08 0"
-                result="coloredNoise"
-              />
-              <feComposite in="SourceGraphic" in2="coloredNoise" operator="over" />
-            </filter>
+            {/* Clean Vector Teak Wood Grain Pattern (Zero GPU Shader Rainbow Artifacts) */}
+            <pattern id="teakGrainPattern" width="18" height="100" patternUnits="userSpaceOnUse">
+              <line x1="2.2" y1="0" x2="2.6" y2="100" stroke="#3A1C08" strokeWidth="0.55" opacity="0.07" />
+              <line x1="6.0" y1="0" x2="5.6" y2="100" stroke="#DDB686" strokeWidth="0.4" opacity="0.07" />
+              <line x1="10.5" y1="0" x2="10.9" y2="100" stroke="#3A1C08" strokeWidth="0.65" opacity="0.06" />
+              <line x1="15.2" y1="0" x2="14.8" y2="100" stroke="#DDB686" strokeWidth="0.35" opacity="0.06" />
+            </pattern>
 
             {/* Radial gradient for Warm Ivory Pieces */}
             <radialGradient id="ivoryPieceGradient" cx="32%" cy="28%" r="68%">
@@ -226,7 +220,15 @@ export function MillsBoard({
             width="100"
             height="100"
             fill="url(#teakWoodGradient)"
-            filter="url(#teakWoodGrain)"
+          />
+
+          {/* Natural Subtle Teak Grain Striations */}
+          <rect
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            fill="url(#teakGrainPattern)"
           />
 
           {/* Ambient Lighting Plank Sheen */}

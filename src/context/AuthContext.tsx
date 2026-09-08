@@ -36,10 +36,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) {
-      // Initialize with default demo session
-      const demoUser: AuthUser = { id: 'demo_user_1', email: 'player@mills.online' };
-      setUser(demoUser);
-      loadUserProfile(demoUser.id).finally(() => setIsLoading(false));
+      if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
+        const demoUser: AuthUser = { id: 'dev_mock_user', email: 'dev@mills.local' };
+        setUser(demoUser);
+        loadUserProfile(demoUser.id).finally(() => setIsLoading(false));
+      } else {
+        setUser(null);
+        setProfile(null);
+        setIsLoading(false);
+      }
       return;
     }
 

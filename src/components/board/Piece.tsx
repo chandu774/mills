@@ -39,18 +39,18 @@ export function Piece({
       }}
       aria-label={`${color} piece`}
     >
-      {/* Selection Ring: Muted Forest Green (Compact, no collision) */}
+      {/* Selection Ring: Distinct Forest Green Outline (Clear Focus) */}
       {isSelected && (
-        <circle
-          cx={cx}
-          cy={cy}
-          r={radius * 1.25}
-          fill="none"
-          stroke="#2E5A3A"
-          strokeWidth="1.3"
-          strokeDasharray="2.5 1.5"
-          className="animate-spin-slow opacity-95"
-        />
+        <g>
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius + 1.3}
+            fill="rgba(46, 90, 58, 0.18)"
+            stroke="#2E5A3A"
+            strokeWidth="1.8"
+          />
+        </g>
       )}
 
       {/* Capture Reticle: Muted Brick Red Pulse */}
@@ -59,19 +59,10 @@ export function Piece({
           <circle
             cx={cx}
             cy={cy}
-            r={radius * 1.28}
-            fill="none"
-            stroke="#B93838"
-            strokeWidth="1.3"
-            className="animate-ping opacity-60"
-          />
-          <circle
-            cx={cx}
-            cy={cy}
-            r={radius * 1.22}
+            r={radius + 1.2}
             fill="rgba(185, 56, 56, 0.2)"
             stroke="#B93838"
-            strokeWidth="1.1"
+            strokeWidth="1.4"
           />
         </g>
       )}
@@ -81,34 +72,47 @@ export function Piece({
         <circle
           cx={cx}
           cy={cy}
-          r={radius * 1.24}
+          r={radius + 1.2}
           fill="none"
           stroke="#D4AF37"
-          strokeWidth="1.4"
+          strokeWidth="1.5"
           className="animate-pulse"
         />
       )}
 
-      {/* Last Move Indicator Ring: Subtle Gold Inlay Ring */}
-      {isLastMove && !isSelected && (
-        <circle
-          cx={cx}
-          cy={cy}
-          r={radius * 1.22}
-          fill="none"
-          stroke="#C59B27"
-          strokeWidth="1.0"
-          strokeDasharray="1.5 1.5"
-        />
+      {/* Last Move Indicator: Exactly ONE Subtle Gold Outline Ring (No concentric circles, no radar target) */}
+      {isLastMove && !isSelected && !isEligibleCapture && !isMillPiece && (
+        <g>
+          {/* Soft ambient glow */}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius + 1.1}
+            fill="none"
+            stroke="#C49A45"
+            strokeWidth="2.4"
+            opacity="0.22"
+          />
+          {/* Main single subtle outline ring */}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius + 1.1}
+            fill="none"
+            stroke="#C49A45"
+            strokeWidth="1.1"
+            opacity="0.9"
+          />
+        </g>
       )}
 
       {/* Natural Physical Piece Shadow */}
       <ellipse
         cx={cx}
         cy={cy + 0.75}
-        rx={radius * 1.05}
-        ry={radius * 0.95}
-        fill={isWhite ? 'rgba(28, 14, 6, 0.45)' : 'rgba(0, 0, 0, 0.65)'}
+        rx={radius * 1.04}
+        ry={radius * 0.94}
+        fill={isWhite ? 'rgba(28, 14, 6, 0.4)' : 'rgba(0, 0, 0, 0.55)'}
         filter="url(#pieceShadowBlur)"
       />
 
@@ -118,53 +122,28 @@ export function Piece({
         cy={cy}
         r={radius}
         fill={isWhite ? 'url(#ivoryPieceGradient)' : 'url(#walnutPieceGradient)'}
-        stroke={isWhite ? '#B8A790' : '#140803'}
+        stroke={isWhite ? '#BFAFA0' : '#140803'}
         strokeWidth="0.8"
         className="transition-transform group-hover:scale-105"
       />
 
-      {/* Top Rim Sheen (Ensures piece never merges with dark board lines or teak) */}
+      {/* Top Rim Sheen (Subtle light reflection) */}
       <path
-        d={`M ${cx - radius * 0.7} ${cy - radius * 0.5} A ${radius * 0.85} ${radius * 0.85} 0 0 1 ${cx + radius * 0.7} ${cy - radius * 0.5}`}
+        d={`M ${cx - radius * 0.65} ${cy - radius * 0.45} A ${radius * 0.8} ${radius * 0.8} 0 0 1 ${cx + radius * 0.65} ${cy - radius * 0.45}`}
         fill="none"
-        stroke={isWhite ? 'rgba(255, 255, 255, 0.95)' : 'rgba(215, 165, 115, 0.42)'}
-        strokeWidth="0.75"
+        stroke={isWhite ? 'rgba(255, 255, 255, 0.85)' : 'rgba(225, 175, 125, 0.35)'}
+        strokeWidth="0.65"
         strokeLinecap="round"
       />
 
-      {/* Turned Wooden Outer Concentric Ridge */}
+      {/* Subtle Turned Medallion Inset (Single gentle bevel, not multiple concentric rings) */}
       <circle
         cx={cx}
         cy={cy}
-        r={radius * 0.68}
+        r={radius * 0.65}
         fill="none"
-        stroke={isWhite ? 'rgba(175, 155, 130, 0.55)' : 'rgba(10, 4, 1, 0.75)'}
-        strokeWidth="0.6"
-      />
-      <path
-        d={`M ${cx - radius * 0.45} ${cy - radius * 0.35} A ${radius * 0.58} ${radius * 0.58} 0 0 1 ${cx + radius * 0.45} ${cy - radius * 0.35}`}
-        fill="none"
-        stroke={isWhite ? 'rgba(255, 255, 255, 0.75)' : 'rgba(210, 160, 110, 0.28)'}
+        stroke={isWhite ? 'rgba(175, 155, 130, 0.35)' : 'rgba(10, 4, 1, 0.45)'}
         strokeWidth="0.5"
-        strokeLinecap="round"
-      />
-
-      {/* Turned Wooden Inner Crown Ridge */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius * 0.38}
-        fill="none"
-        stroke={isWhite ? 'rgba(165, 145, 120, 0.6)' : 'rgba(8, 3, 1, 0.85)'}
-        strokeWidth="0.5"
-      />
-
-      {/* Center Pip / Turned Core */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius * 0.16}
-        fill={isWhite ? 'rgba(220, 205, 185, 0.75)' : 'rgba(40, 24, 14, 0.85)'}
       />
     </g>
   );

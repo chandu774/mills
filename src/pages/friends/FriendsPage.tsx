@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Tabs } from '@/components/ui/Tabs';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -8,10 +8,13 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Friend, FriendRequest, GameVariant, TimeControl } from '@/lib/types';
-import { Search, Swords, UserPlus, Check, X, Clock } from 'lucide-react';
+import { Search, Swords, UserPlus, Check, X, Clock, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function FriendsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [challengeFriend, setChallengeFriend] = useState<Friend | null>(null);
@@ -19,53 +22,55 @@ export function FriendsPage() {
   const [challengeTimeControl, setChallengeTimeControl] = useState<TimeControl>('5_MIN');
   const [challengeSent, setChallengeSent] = useState(false);
 
-  // Sample friends dataset for Phase 1
-  const [friends, setFriends] = useState<Friend[]>([
-    {
-      id: 'f1',
-      username: 'GrandmasterKai',
-      displayName: 'Kai Tanaka',
-      status: 'online',
-      ratings: { mills3: 1920, mills6: 1920, mills9: 2145 },
-    },
-    {
-      id: 'f2',
-      username: 'TacticalEagle',
-      displayName: 'Marcus Vance',
-      status: 'in_game',
-      ratings: { mills3: 1650, mills6: 2040, mills9: 1994 },
-    },
-    {
-      id: 'f3',
-      username: 'VortexStrategist',
-      displayName: 'Liam O’Connor',
-      status: 'online',
-      ratings: { mills3: 1710, mills6: 1860, mills9: 1912 },
-    },
-    {
-      id: 'f4',
-      username: 'ShadowRook',
-      displayName: 'Sophia Chen',
-      status: 'offline',
-      ratings: { mills3: 1540, mills6: 1975, mills9: 1874 },
-    },
-  ]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [requests, setRequests] = useState<FriendRequest[]>([]);
 
-  // Sample friend requests
-  const [requests, setRequests] = useState<FriendRequest[]>([
-    {
-      id: 'r1',
-      fromUser: {
-        id: 'req1',
-        username: 'SilentNomad',
-        displayName: 'Tariq Al-Mansoor',
-        status: 'online',
-        ratings: { mills3: 1400, mills6: 1620, mills9: 1810 },
-      },
-      createdAt: '1 hour ago',
-      status: 'pending',
+  useEffect(() => {
+    async function loadFriends() {
+      if (!isSupabaseConfigured() || !supabase || !user) {
+        if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
+          setFriends([
+            {
+              id: 'mock_f1',
+              username: 'DevFriend',
+              displayName: 'Dev Friend',
+              status: 'online',
+              ratings: { mills3: 1200, mills6: 1200, mills9: 1200 },
+            },
+          ]);
+        } else {
+          setFriends([]);
+          setRequests([]);
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('friendships')
+          .select('id, friend:friend_id(id, username, display_name, avatar_url), status')
+          .eq('user_id', user.id);
+
+        if (data && !error) {
+          const mapped: Friend[] = data.map((f: any) => ({
+            id: f.friend?.id || f.id,
+            username: f.friend?.username || 'Player',
+            displayName: f.friend?.display_name || f.friend?.username || 'Player',
+            status: 'offline',
+            ratings: { mills3: 1200, mills6: 1200, mills9: 1200 },
+          }));
+          setFriends(mapped);
+        } else {
+          setFriends([]);
+        }
+      } catch (err) {
+        console.warn('[FriendsPage] Error loading friends:', err);
+        setFriends([]);
+      }
     }
-  ]);
+
+    loadFriends();
+  }, [user?.id]);
 
   const filteredFriends = friends.filter((f) => {
     const matchesSearch = f.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -111,6 +116,17 @@ export function FriendsPage() {
           </div>
         }
       />
+
+      {/* Database Connection Notice */}
+      {!isSupabaseConfigured() && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
+          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <span className="font-bold block">Database not connected</span>
+            Configure <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to add friends and sync friend challenges across devices.
+          </div>
+        </div>
+      )}
 
       <Tabs
         tabs={[

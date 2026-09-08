@@ -73,7 +73,7 @@ export class GameService {
         });
         if (error) console.warn('[GameService] Supabase room insert notice:', error.message);
       } catch (err) {
-        console.warn('[GameService] Supabase unavailable, saved locally:', err);
+        console.warn('[GameService] Supabase unavailable:', err);
       }
     }
 
@@ -84,11 +84,7 @@ export class GameService {
    * Retrieves a game room by ID or 6-character Code
    */
   public async getRoom(roomIdOrCode: string): Promise<GameRoom | null> {
-    // 1. Check local storage first for quick lookup
-    const local = this.getLocalRoom(roomIdOrCode);
-    if (local) return local;
-
-    // 2. Query Supabase
+    // 1. Query Supabase FIRST if configured (database authoritative)
     if (isSupabaseConfigured() && supabase) {
       try {
         const isUuid = roomIdOrCode.includes('-');
@@ -100,34 +96,51 @@ export class GameService {
           ? await query.eq('id', roomIdOrCode).maybeSingle()
           : await query.or(`id.eq.${roomIdOrCode}`).maybeSingle();
 
-        if (error || !data) return null;
+        if (data && !error) {
+          const hostColor = data.white_player_id ? 'WHITE' : 'BLACK';
+          const hostInfo = hostColor === 'WHITE' ? data.white : data.black;
+          const guestInfo = hostColor === 'WHITE' ? data.black : data.white;
+          const guestColor: PlayerColor = hostColor === 'WHITE' ? 'BLACK' : 'WHITE';
 
-        const hostColor = data.white_player_id ? 'WHITE' : 'BLACK';
-        const hostInfo = hostColor === 'WHITE' ? data.white : data.black;
-
-        return {
-          id: data.id,
-          code: data.id.substring(0, 6).toUpperCase(),
-          variant: data.variant,
-          timeControl: data.time_control,
-          mode: data.is_rated ? 'RANKED' : 'CASUAL',
-          status: data.status,
-          hostPlayer: {
-            id: hostInfo?.id || 'host',
-            displayName: hostInfo?.display_name || hostInfo?.username || 'Player 1',
-            color: hostColor,
-            isOnline: true,
-            connectedAt: new Date(data.created_at).getTime(),
-            lastSeen: Date.now(),
-          },
-          spectatorCount: 0,
-          createdAt: new Date(data.created_at).getTime(),
-          moveCount: data.moves_count || 0,
-        };
-      } catch {
-        return null;
+          return {
+            id: data.id,
+            code: data.id.substring(0, 6).toUpperCase(),
+            variant: data.variant,
+            timeControl: data.time_control,
+            mode: data.is_rated ? 'RANKED' : 'CASUAL',
+            status: data.status,
+            hostPlayer: {
+              id: hostInfo?.id || 'host',
+              displayName: hostInfo?.display_name || hostInfo?.username || 'Player 1',
+              color: hostColor,
+              isOnline: true,
+              connectedAt: new Date(data.created_at).getTime(),
+              lastSeen: Date.now(),
+            },
+            guestPlayer: guestInfo ? {
+              id: guestInfo.id,
+              displayName: guestInfo.display_name || guestInfo.username || 'Player 2',
+              color: guestColor,
+              isOnline: true,
+              connectedAt: Date.now(),
+              lastSeen: Date.now(),
+            } : undefined,
+            spectatorCount: 0,
+            createdAt: new Date(data.created_at).getTime(),
+            moveCount: data.moves_count || 0,
+            fen: data.current_fen || undefined,
+            winner: data.winner_id ? (data.winner_id === data.white_player_id ? 'WHITE' : 'BLACK') : null,
+            winReason: data.win_reason || undefined,
+          };
+        }
+      } catch (err) {
+        console.warn('[GameService] Failed to query Supabase room:', err);
       }
     }
+
+    // 2. Check local/in-memory storage for offline / dev mock games
+    const local = this.getLocalRoom(roomIdOrCode);
+    if (local) return local;
 
     return null;
   }

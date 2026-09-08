@@ -1,17 +1,19 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Trophy, Users, Swords, Shield, ChevronRight } from 'lucide-react';
+import { Play, Trophy, Users, Swords, Shield, ChevronRight, Database } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { RatingBadge } from '@/components/common/RatingBadge';
 import { GameVariant, GameRecord } from '@/lib/types';
 import { formatVariantShort, formatDuration } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { getDatabaseStatus } from '@/lib/supabase/client';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<GameVariant>('MILLS_9');
+  const dbStatus = getDatabaseStatus();
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -20,62 +22,34 @@ export function HomePage() {
     return 'Good evening';
   }, []);
 
-  const playerName = profile?.displayName || profile?.username || 'Alex';
+  const playerName = profile?.displayName || profile?.username || (user ? 'Player' : 'Guest');
 
   const ratings = {
-    MILLS_9: profile?.ratings?.mills9 || 1516,
-    MILLS_6: profile?.ratings?.mills6 || 1382,
-    MILLS_3: profile?.ratings?.mills3 || 1247,
+    MILLS_9: profile?.ratings?.mills9 || 1200,
+    MILLS_6: profile?.ratings?.mills6 || 1200,
+    MILLS_3: profile?.ratings?.mills3 || 1200,
   };
 
-  const recentGames: GameRecord[] = [
-    {
-      id: 'g1',
-      opponentUsername: 'VortexStrategist',
-      variant: 'MILLS_9',
-      mode: 'RANKED',
-      timeControl: '5_MIN',
-      result: 'WIN',
-      ratingChange: +18,
-      ratingAfter: 1516,
-      date: 'Today, 11:20 AM',
-      durationSeconds: 340,
-      movesCount: 42,
-    },
-    {
-      id: 'g2',
-      opponentUsername: 'SilentNomad',
-      variant: 'MILLS_6',
-      mode: 'RANKED',
-      timeControl: '3_MIN',
-      result: 'LOSS',
-      ratingChange: -14,
-      ratingAfter: 1382,
-      date: 'Yesterday, 8:45 PM',
-      durationSeconds: 215,
-      movesCount: 28,
-    },
-    {
-      id: 'g3',
-      opponentUsername: 'SpeedTactician',
-      variant: 'MILLS_3',
-      mode: 'RANKED',
-      timeControl: '3_MIN',
-      result: 'WIN',
-      ratingChange: +22,
-      ratingAfter: 1247,
-      date: '2 days ago',
-      durationSeconds: 85,
-      movesCount: 14,
-    }
-  ];
+  // Real recent games (empty until user plays matches)
+  const recentGames: GameRecord[] = [];
 
   return (
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200 max-w-2xl mx-auto">
       {/* Screen-reader heading for test compatibility & accessibility */}
       <h1 className="sr-only">Play Mills Online</h1>
 
-      {/* 1. Game Launcher Header: Player Greeting & Quick Status */}
+      {/* Database Connection Notice if not connected */}
+      {!dbStatus.isConfigured && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 text-left">
+          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <span className="font-bold block">Database not connected</span>
+            Set <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to enable real user accounts and live cloud matchmaking. Offline Pass & Play is fully playable.
+          </div>
+        </div>
+      )}
+
+      {/* 1. Game Launcher Header: Player Greeting & Database Status */}
       <div className="flex items-center justify-between pt-1">
         <div>
           <span className="text-[10px] font-mono tracking-widest uppercase font-bold text-[#C4973B]">
@@ -85,9 +59,18 @@ export function HomePage() {
             {greeting}, {playerName}
           </h2>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" title="Connected" />
-          <span className="text-xs font-semibold text-ink-muted">Online</span>
+        <div>
+          {dbStatus.isConfigured ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-bold text-emerald-800">Database: Connected</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-[11px] font-bold text-amber-800">Database not connected</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -96,7 +79,7 @@ export function HomePage() {
         <div className="flex items-center justify-between pb-3 border-b border-[#5C4028]/60">
           <div>
             <p className="text-[11px] uppercase tracking-wider font-semibold text-[#D5C9BD]">
-              Your Rating
+              {profile ? 'Your Rating' : 'Base Rating'}
             </p>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl sm:text-3xl font-black font-mono text-[#FAF7F2]">
@@ -245,43 +228,50 @@ export function HomePage() {
         </div>
 
         <div className="space-y-2">
-          {recentGames.map((game) => (
-            <div
-              key={game.id}
-              onClick={() => navigate('/profile')}
-              className="flex items-center justify-between p-3 rounded-2xl bg-white border border-background-border hover:border-ink/20 transition-all shadow-2xs active:scale-[0.99] cursor-pointer"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`w-2 h-8 rounded-full shrink-0 ${
-                    game.result === 'WIN' ? 'bg-primary' : 'bg-alert-red'
-                  }`}
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-ink truncate">vs {game.opponentUsername}</span>
-                    <span className="text-[10px] bg-background-elevated px-1.5 py-0.5 rounded text-ink-muted font-mono shrink-0">
-                      {formatVariantShort(game.variant)}
-                    </span>
+          {recentGames.length === 0 ? (
+            <div className="p-5 rounded-2xl bg-white border border-background-border text-center shadow-2xs">
+              <p className="text-xs font-semibold text-ink-muted">No recent matches recorded yet.</p>
+              <p className="text-[11px] text-ink-light mt-0.5">Start a match above to begin building your record!</p>
+            </div>
+          ) : (
+            recentGames.map((game) => (
+              <div
+                key={game.id}
+                onClick={() => navigate('/profile')}
+                className="flex items-center justify-between p-3 rounded-2xl bg-white border border-background-border hover:border-ink/20 transition-all shadow-2xs active:scale-[0.99] cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-2 h-8 rounded-full shrink-0 ${
+                      game.result === 'WIN' ? 'bg-primary' : 'bg-alert-red'
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-ink truncate">vs {game.opponentUsername}</span>
+                      <span className="text-[10px] bg-background-elevated px-1.5 py-0.5 rounded text-ink-muted font-mono shrink-0">
+                        {formatVariantShort(game.variant)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ink-muted mt-0.5 truncate">
+                      {game.date} • {formatDuration(game.durationSeconds)}
+                    </p>
                   </div>
-                  <p className="text-[11px] text-ink-muted mt-0.5 truncate">
-                    {game.date} • {formatDuration(game.durationSeconds)}
-                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span
+                    className={`text-sm font-black font-mono ${
+                      game.result === 'WIN' ? 'text-primary' : 'text-alert-red'
+                    }`}
+                  >
+                    {game.ratingChange > 0 ? `+${game.ratingChange}` : game.ratingChange}
+                  </span>
+                  <p className="text-[10px] font-mono text-ink-light">{game.ratingAfter}</p>
                 </div>
               </div>
-
-              <div className="text-right shrink-0">
-                <span
-                  className={`text-sm font-black font-mono ${
-                    game.result === 'WIN' ? 'text-primary' : 'text-alert-red'
-                  }`}
-                >
-                  {game.ratingChange > 0 ? `+${game.ratingChange}` : game.ratingChange}
-                </span>
-                <p className="text-[10px] font-mono text-ink-light">{game.ratingAfter}</p>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

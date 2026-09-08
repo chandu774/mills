@@ -23,7 +23,7 @@ export class RealtimeGameChannel {
   private init() {
     this.connected = true;
 
-    // 1. Supabase Realtime if live credentials are configured
+    // 1. Supabase Realtime if live credentials are configured (Authoritative)
     if (isSupabaseConfigured() && supabase) {
       this.supabaseChannel = supabase.channel(`mills_room:${this.roomId}`, {
         config: { broadcast: { self: false } },
@@ -38,9 +38,10 @@ export class RealtimeGameChannel {
             this.connected = true;
           }
         });
+      return;
     }
 
-    // 2. BroadcastChannel for local/demo cross-tab coordination
+    // 2. BroadcastChannel strictly for local development / test offline coordination
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
         this.localBroadcastChannel = new BroadcastChannel(`mills_game_${this.roomId}`);
@@ -103,6 +104,7 @@ export class RealtimeGameChannel {
         event: 'game_event',
         payload: message,
       });
+      return;
     }
 
     // Broadcast over BroadcastChannel

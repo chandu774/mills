@@ -107,7 +107,7 @@ describe('Phase 1: Platform Navigation & Views', () => {
     expect(screen.getByText('Upcoming')).toBeInTheDocument();
   });
 
-  it('renders Leaderboards with rankings and player avatars', () => {
+  it('renders Leaderboards with rankings and player avatars or empty state', () => {
     render(
       <MemoryRouter initialEntries={['/leaderboard']}>
         <App />
@@ -115,7 +115,7 @@ describe('Phase 1: Platform Navigation & Views', () => {
     );
 
     expect(screen.getByText('Global Leaderboards')).toBeInTheDocument();
-    expect(screen.getAllByText('GrandmasterKai').length).toBeGreaterThan(0);
+    expect(screen.getByText(/No Ranked Matches Yet|Database Not Connected/i)).toBeInTheDocument();
   });
 
   it('renders Profile page with player statistics and ratings', () => {
@@ -125,9 +125,9 @@ describe('Phase 1: Platform Navigation & Views', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Alex Chen')).toBeInTheDocument();
-    expect(screen.getByText('@PlayerOne')).toBeInTheDocument();
+    expect(screen.getByText(/Competitive Ratings/i)).toBeInTheDocument();
     expect(screen.getByText('Match History')).toBeInTheDocument();
+    expect(screen.getByText('Guest Player')).toBeInTheDocument();
   });
 
   it('renders Rules page with game guide and phase descriptions', () => {

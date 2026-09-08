@@ -7,32 +7,27 @@ import fs from 'fs';
 import path from 'path';
 
 describe('Phase 4: Authentication Service', () => {
-  it('handles sign in gracefully in local demo mode', async () => {
+  it('explicitly reports database not connected on sign in when unconfigured', async () => {
     const res = await authService.signIn('player@mills.online', 'password123');
-    expect(res.error).toBeNull();
-    expect(res.data).not.toBeNull();
-    expect(res.data?.email).toBe('player@mills.online');
+    expect(res.error).toContain('Database not connected');
+    expect(res.data).toBeNull();
   });
 
-  it('handles sign up gracefully in local demo mode', async () => {
+  it('explicitly reports database not connected on sign up when unconfigured', async () => {
     const res = await authService.signUp(
       'newplayer@mills.online',
       'password123',
       'new_player',
       'New Player'
     );
-    expect(res.error).toBeNull();
-    expect(res.data).not.toBeNull();
-    expect(res.data?.email).toBe('newplayer@mills.online');
+    expect(res.error).toContain('Database not connected');
+    expect(res.data).toBeNull();
   });
 
-  it('retrieves user profile with baseline 1200 ratings for all 3 variants', async () => {
+  it('reports database not connected when fetching profile without database', async () => {
     const res = await authService.getProfile('demo_user_1');
-    expect(res.error).toBeNull();
-    expect(res.data).not.toBeNull();
-    expect(res.data?.ratings.mills3).toBeDefined();
-    expect(res.data?.ratings.mills6).toBeDefined();
-    expect(res.data?.ratings.mills9).toBeDefined();
+    expect(res.error).toBe('Database not connected.');
+    expect(res.data).toBeNull();
   });
 });
 

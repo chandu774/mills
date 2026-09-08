@@ -14,27 +14,64 @@ export const authService = {
     displayName: string
   ): Promise<AuthResponse<{ id: string; email: string }>> {
     if (!isSupabaseConfigured() || !supabase) {
-      // Local demo mock signup
+      if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
+        return {
+          data: { id: 'dev_mock_user', email },
+          error: null,
+        };
+      }
       return {
-        data: { id: 'demo_user_1', email },
-        error: null,
+        data: null,
+        error: 'Database not connected. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
       };
     }
 
     try {
+      const cleanUsername = username.toLowerCase().trim();
+      const cleanDisplayName = displayName.trim();
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username: username.toLowerCase().trim(),
-            display_name: displayName.trim(),
+            username: cleanUsername,
+            display_name: cleanDisplayName,
           },
         },
       });
 
       if (error) return { data: null, error: error.message };
       if (!data.user) return { data: null, error: 'User creation failed.' };
+
+      // Ensure profile record exists in public.profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          username: cleanUsername,
+          display_name: cleanDisplayName,
+        }, { onConflict: 'id' });
+
+      if (profileError) {
+        console.warn('[authService] Profile upsert notice:', profileError.message);
+      }
+
+      // Ensure initial ratings exist for all 3 variants
+      const variants = ['MILLS_3', 'MILLS_6', 'MILLS_9'];
+      for (const v of variants) {
+        await supabase
+          .from('ratings')
+          .upsert({
+            user_id: data.user.id,
+            variant: v,
+            rating: 1200,
+            games_played: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+          }, { onConflict: 'user_id,variant' });
+      }
 
       return {
         data: { id: data.user.id, email: data.user.email || email },
@@ -47,10 +84,15 @@ export const authService = {
 
   async signIn(email: string, password: string): Promise<AuthResponse<{ id: string; email: string }>> {
     if (!isSupabaseConfigured() || !supabase) {
-      // Local demo mock login
+      if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
+        return {
+          data: { id: 'dev_mock_user', email },
+          error: null,
+        };
+      }
       return {
-        data: { id: 'demo_user_1', email },
-        error: null,
+        data: null,
+        error: 'Database not connected. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
       };
     }
 
@@ -87,18 +129,23 @@ export const authService = {
 
   async getProfile(userId: string): Promise<AuthResponse<UserProfile>> {
     if (!isSupabaseConfigured() || !supabase) {
-      // Return default demo profile
+      if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
+        return {
+          data: {
+            id: userId,
+            username: 'DevPlayer',
+            displayName: 'Dev User',
+            bio: 'Local development mock player',
+            createdAt: 'Today',
+            ratings: { mills3: 1200, mills6: 1200, mills9: 1200 },
+            stats: { gamesPlayed: 0, wins: 0, losses: 0, draws: 0 },
+          },
+          error: null,
+        };
+      }
       return {
-        data: {
-          id: userId,
-          username: 'PlayerOne',
-          displayName: 'Alex Chen',
-          bio: 'Competitive Mills player aiming for 2000+ rating in 9-Piece Men\'s Morris.',
-          createdAt: 'August 2026',
-          ratings: { mills3: 1247, mills6: 1382, mills9: 1516 },
-          stats: { gamesPlayed: 172, wins: 98, losses: 62, draws: 12 },
-        },
-        error: null,
+        data: null,
+        error: 'Database not connected.',
       };
     }
 

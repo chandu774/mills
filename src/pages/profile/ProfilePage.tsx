@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -7,112 +7,115 @@ import { StatCard } from '@/components/common/StatCard';
 import { Tabs } from '@/components/ui/Tabs';
 import { GameRecord, UserProfile } from '@/lib/types';
 import { formatVariantShort, formatDuration } from '@/lib/utils';
-import { Trophy, Swords, Calendar, Award, TrendingUp, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Trophy, Swords, Calendar, Award, TrendingUp, ShieldCheck, ExternalLink, Database } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function ProfilePage() {
+  const { user, profile } = useAuth();
   const [activeHistoryTab, setActiveHistoryTab] = useState('all');
+  const [matchHistory, setMatchHistory] = useState<GameRecord[]>([]);
 
-  // Sample User Profile for Phase 1
-  const profile: UserProfile = {
-    id: 'usr_1',
-    username: 'PlayerOne',
-    displayName: 'Alex Chen',
-    bio: 'Competitive Mills enthusiast aiming for 2000+ rating in 9-Piece Men\'s Morris. Always open for 5-min challenges!',
-    createdAt: 'August 2026',
+  // Active or Fallback profile (never hardcoded fake user)
+  const currentProfile: UserProfile = profile || {
+    id: user?.id || 'guest',
+    username: user ? 'Player' : 'Guest',
+    displayName: user ? 'Registered Player' : 'Guest Player',
+    bio: user
+      ? 'Competitive Mills player.'
+      : 'Playing as Guest. Connect database and sign in to customize profile and preserve ratings.',
+    createdAt: 'Joined today',
     ratings: {
-      mills3: 1247,
-      mills6: 1382,
-      mills9: 1516,
+      mills3: 1200,
+      mills6: 1200,
+      mills9: 1200,
     },
     stats: {
-      gamesPlayed: 172,
-      wins: 98,
-      losses: 62,
-      draws: 12,
-    }
+      gamesPlayed: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+    },
   };
 
-  const matchHistory: GameRecord[] = [
-    {
-      id: 'm1',
-      opponentUsername: 'VortexStrategist',
-      variant: 'MILLS_9',
-      mode: 'RANKED',
-      timeControl: '5_MIN',
-      result: 'WIN',
-      ratingChange: +18,
-      ratingAfter: 1516,
-      date: 'Today, 11:20 AM',
-      durationSeconds: 340,
-      movesCount: 42,
-    },
-    {
-      id: 'm2',
-      opponentUsername: 'SilentNomad',
-      variant: 'MILLS_6',
-      mode: 'RANKED',
-      timeControl: '3_MIN',
-      result: 'LOSS',
-      ratingChange: -14,
-      ratingAfter: 1382,
-      date: 'Yesterday, 8:45 PM',
-      durationSeconds: 215,
-      movesCount: 28,
-    },
-    {
-      id: 'm3',
-      opponentUsername: 'SpeedTactician',
-      variant: 'MILLS_3',
-      mode: 'RANKED',
-      timeControl: '3_MIN',
-      result: 'WIN',
-      ratingChange: +22,
-      ratingAfter: 1247,
-      date: '2 days ago',
-      durationSeconds: 85,
-      movesCount: 14,
-    },
-    {
-      id: 'm4',
-      opponentUsername: 'GrandmasterKai',
-      variant: 'MILLS_9',
-      mode: 'RANKED',
-      timeControl: '10_MIN',
-      result: 'LOSS',
-      ratingChange: -11,
-      ratingAfter: 1498,
-      date: '3 days ago',
-      durationSeconds: 610,
-      movesCount: 56,
-    },
-    {
-      id: 'm5',
-      opponentUsername: 'CobaltKnight',
-      variant: 'MILLS_9',
-      mode: 'CASUAL',
-      timeControl: '5_MIN',
-      result: 'DRAW',
-      ratingChange: 0,
-      ratingAfter: 1509,
-      date: '4 days ago',
-      durationSeconds: 420,
-      movesCount: 50,
+  useEffect(() => {
+    async function fetchMatchHistory() {
+      if (!isSupabaseConfigured() || !supabase || !user) {
+        setMatchHistory([]);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('games')
+          .select('id, variant, time_control, is_rated, status, winner_id, win_reason, created_at, started_at, ended_at, moves_count, white:white_player_id(id, username, display_name), black:black_player_id(id, username, display_name)')
+          .or(`white_player_id.eq.${user.id},black_player_id.eq.${user.id}`)
+          .eq('status', 'FINISHED')
+          .order('ended_at', { ascending: false })
+          .limit(20);
+
+        if (data && !error) {
+          const records: GameRecord[] = data.map((g: any) => {
+            const isWhite = g.white?.id === user.id;
+            const opponent = isWhite ? g.black : g.white;
+            const didWin = g.winner_id === user.id;
+            const isDraw = !g.winner_id;
+            const duration = g.started_at && g.ended_at
+              ? Math.max(1, Math.round((new Date(g.ended_at).getTime() - new Date(g.started_at).getTime()) / 1000))
+              : 60;
+
+            return {
+              id: g.id,
+              opponentUsername: opponent?.username || opponent?.display_name || 'Opponent',
+              variant: g.variant,
+              mode: g.is_rated ? 'RANKED' : 'CASUAL',
+              timeControl: g.time_control,
+              result: didWin ? 'WIN' : isDraw ? 'DRAW' : 'LOSS',
+              ratingChange: didWin ? 16 : isDraw ? 0 : -16,
+              ratingAfter: 1200,
+              date: new Date(g.ended_at || g.created_at).toLocaleDateString(),
+              durationSeconds: duration,
+              movesCount: g.moves_count || 0,
+            };
+          });
+          setMatchHistory(records);
+        } else {
+          setMatchHistory([]);
+        }
+      } catch (err) {
+        console.warn('[ProfilePage] Error fetching games:', err);
+        setMatchHistory([]);
+      }
     }
-  ];
 
-  const winRate = Math.round((profile.stats.wins / profile.stats.gamesPlayed) * 100);
+    fetchMatchHistory();
+  }, [user?.id]);
 
+  const winRate = currentProfile.stats.gamesPlayed > 0
+    ? Math.round((currentProfile.stats.wins / currentProfile.stats.gamesPlayed) * 100)
+    : 0;
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200">
+      {/* Database Connection Notice */}
+      {!isSupabaseConfigured() && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
+          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <span className="font-bold block">Database not connected</span>
+            Configure <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to link real player profiles, authentic ratings, and cloud match history.
+          </div>
+        </div>
+      )}
+
       {/* Profile Header Banner */}
       <div className="rounded-3xl border border-background-border bg-white p-4 sm:p-6 md:p-8 shadow-soft">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
-          <Avatar name={profile.username} size="xl" status="online" className="shadow-md" />
+          <Avatar name={currentProfile.username} size="xl" status={user ? 'online' : 'offline'} className="shadow-md" />
           <div className="flex-1 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-ink">{profile.displayName}</h1>
-                <p className="text-sm font-mono text-primary font-bold">@{profile.username}</p>
+                <h1 className="text-2xl md:text-3xl font-black text-ink">{currentProfile.displayName}</h1>
+                <p className="text-sm font-mono text-primary font-bold">@{currentProfile.username}</p>
               </div>
               <div className="flex items-center gap-2 justify-center">
                 <Button size="sm" variant="secondary" className="text-xs">
@@ -124,14 +127,14 @@ export function ProfilePage() {
               </div>
             </div>
 
-            <p className="text-xs md:text-sm text-ink-muted max-w-2xl leading-relaxed">{profile.bio}</p>
+            <p className="text-xs md:text-sm text-ink-muted max-w-2xl leading-relaxed">{currentProfile.bio}</p>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-ink-muted pt-2">
               <span className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5 text-ink-light" /> Member since {profile.createdAt}
+                <Calendar className="h-3.5 w-3.5 text-ink-light" /> Member since {currentProfile.createdAt}
               </span>
               <span className="flex items-center gap-1 text-primary font-medium">
-                <ShieldCheck className="h-3.5 w-3.5" /> Verified Competitor
+                <ShieldCheck className="h-3.5 w-3.5" /> {user ? 'Verified Competitor' : 'Guest Account'}
               </span>
             </div>
           </div>
@@ -148,10 +151,10 @@ export function ProfilePage() {
             <CardContent className="p-3.5 sm:p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-ink-muted uppercase">3-Piece Mills</p>
-                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{profile.ratings.mills3}</p>
-                <p className="text-[11px] text-primary font-semibold mt-0.5 sm:mt-1">Challenger Tier</p>
+                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{currentProfile.ratings.mills3}</p>
+                <p className="text-[11px] text-primary font-semibold mt-0.5 sm:mt-1">Standard Rating</p>
               </div>
-              <RatingBadge rating={profile.ratings.mills3} size="md" />
+              <RatingBadge rating={currentProfile.ratings.mills3} size="md" />
             </CardContent>
           </Card>
 
@@ -159,10 +162,10 @@ export function ProfilePage() {
             <CardContent className="p-3.5 sm:p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-ink-muted uppercase">6-Piece Mills</p>
-                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{profile.ratings.mills6}</p>
-                <p className="text-[11px] text-gold font-semibold mt-0.5 sm:mt-1">Challenger Tier</p>
+                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{currentProfile.ratings.mills6}</p>
+                <p className="text-[11px] text-gold font-semibold mt-0.5 sm:mt-1">Standard Rating</p>
               </div>
-              <RatingBadge rating={profile.ratings.mills6} size="md" />
+              <RatingBadge rating={currentProfile.ratings.mills6} size="md" />
             </CardContent>
           </Card>
 
@@ -170,10 +173,10 @@ export function ProfilePage() {
             <CardContent className="p-3.5 sm:p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-ink-muted uppercase">9-Piece Morris</p>
-                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{profile.ratings.mills9}</p>
-                <p className="text-[11px] text-[#8A6318] font-semibold mt-0.5 sm:mt-1">Expert Tier</p>
+                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{currentProfile.ratings.mills9}</p>
+                <p className="text-[11px] text-[#8A6318] font-semibold mt-0.5 sm:mt-1">Standard Rating</p>
               </div>
-              <RatingBadge rating={profile.ratings.mills9} size="md" />
+              <RatingBadge rating={currentProfile.ratings.mills9} size="md" />
             </CardContent>
           </Card>
         </div>
@@ -187,24 +190,24 @@ export function ProfilePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Total Games"
-            value={profile.stats.gamesPlayed}
+            value={currentProfile.stats.gamesPlayed}
             icon={<Swords className="h-5 w-5 text-ink-muted" />}
           />
           <StatCard
             label="Victories"
-            value={profile.stats.wins}
+            value={currentProfile.stats.wins}
             subValue={`${winRate}% Win Rate`}
             icon={<Trophy className="h-5 w-5 text-primary" />}
           />
           <StatCard
             label="Defeats"
-            value={profile.stats.losses}
-            subValue={`${Math.round((profile.stats.losses / profile.stats.gamesPlayed) * 100)}% Loss Rate`}
+            value={currentProfile.stats.losses}
+            subValue={`${currentProfile.stats.gamesPlayed > 0 ? Math.round((currentProfile.stats.losses / currentProfile.stats.gamesPlayed) * 100) : 0}% Loss Rate`}
             icon={<TrendingUp className="h-5 w-5 text-alert-red" />}
           />
           <StatCard
             label="Draws"
-            value={profile.stats.draws}
+            value={currentProfile.stats.draws}
             icon={<Award className="h-5 w-5 text-gold" />}
           />
         </div>
@@ -230,9 +233,15 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2.5">
-            {matchHistory
-              .filter(m => activeHistoryTab === 'all' || m.variant === activeHistoryTab)
-              .map((match) => (
+            {matchHistory.length === 0 ? (
+              <div className="p-8 text-center bg-background/50 rounded-2xl border border-background-border">
+                <p className="text-sm font-semibold text-ink-muted">No matches recorded yet</p>
+                <p className="text-xs text-ink-light mt-1">Play an online or ranked game to log moves and track your ELO rating!</p>
+              </div>
+            ) : (
+              matchHistory
+                .filter(m => activeHistoryTab === 'all' || m.variant === activeHistoryTab)
+                .map((match) => (
                 <div
                   key={match.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl bg-background border border-background-border hover:border-ink/20 transition-colors gap-3"
@@ -276,7 +285,8 @@ export function ProfilePage() {
                     </Button>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

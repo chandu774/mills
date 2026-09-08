@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Tabs } from '@/components/ui/Tabs';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
@@ -7,87 +7,73 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Tournament } from '@/lib/types';
 import { formatVariantShort, formatTimeControl } from '@/lib/utils';
-import { Trophy, Clock, Users, Flame, CheckCircle, ArrowRight } from 'lucide-react';
+import { Trophy, Clock, Users, Flame, CheckCircle, ArrowRight, Database } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function TournamentsPage() {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
-  // Sample tournaments data for Phase 1
-  const [tournaments, setTournaments] = useState<Tournament[]>([
-    {
-      id: 't1',
-      name: 'Weekend 9-Piece Arena Blitz',
-      description: '1-hour continuous arena. Win consecutive games to earn streak bonuses! All rating levels welcome.',
-      variant: 'MILLS_9',
-      timeControl: '3_MIN',
-      type: 'ARENA',
-      status: 'UPCOMING',
-      startTime: 'Today, 6:00 PM',
-      endTime: 'Today, 7:00 PM',
-      maxPlayers: 128,
-      currentPlayers: 54,
-      userJoined: false,
-      standings: [
-        { rank: 1, username: 'GrandmasterKai', rating: 1940, score: 32, gamesPlayed: 11, wins: 9, losses: 1, draws: 1 },
-        { rank: 2, username: 'MillEmperor', rating: 1885, score: 28, gamesPlayed: 10, wins: 8, losses: 2, draws: 0 },
-        { rank: 3, username: 'TacticalEagle', rating: 1720, score: 22, gamesPlayed: 9, wins: 6, losses: 2, draws: 1 },
-        { rank: 4, username: 'VortexStrategist', rating: 1650, score: 18, gamesPlayed: 8, wins: 5, losses: 3, draws: 0 },
-      ]
-    },
-    {
-      id: 't2',
-      name: 'Daily 6-Piece Rapid Clash',
-      description: 'Battle in 6-Piece Mills with 5-minute clocks. Fast tactical mills and tight positioning.',
-      variant: 'MILLS_6',
-      timeControl: '5_MIN',
-      type: 'ARENA',
-      status: 'LIVE',
-      startTime: 'Live Now',
-      endTime: 'Ends in 24 mins',
-      maxPlayers: 64,
-      currentPlayers: 42,
-      userJoined: true,
-      standings: [
-        { rank: 1, username: 'ShadowRook', rating: 1750, score: 18, gamesPlayed: 6, wins: 5, losses: 1, draws: 0 },
-        { rank: 2, username: 'PlayerOne', rating: 1382, score: 14, gamesPlayed: 5, wins: 4, losses: 1, draws: 0 },
-        { rank: 3, username: 'CobaltKnight', rating: 1410, score: 10, gamesPlayed: 5, wins: 3, losses: 2, draws: 0 },
-      ]
-    },
-    {
-      id: 't3',
-      name: 'Speed 3-Piece Championship',
-      description: 'Ultra fast 3-piece mills. 3 minutes untimed turns. Perfect for lightning reaction time.',
-      variant: 'MILLS_3',
-      timeControl: '3_MIN',
-      type: 'ARENA',
-      status: 'UPCOMING',
-      startTime: 'Tomorrow, 2:00 PM',
-      endTime: 'Tomorrow, 3:00 PM',
-      maxPlayers: 64,
-      currentPlayers: 19,
-      userJoined: false,
-    },
-    {
-      id: 't4',
-      name: 'Friday Night Morris Masters',
-      description: 'Completed 9-Piece championship arena. 86 players competed.',
-      variant: 'MILLS_9',
-      timeControl: '5_MIN',
-      type: 'ARENA',
-      status: 'FINISHED',
-      startTime: 'Friday, Sep 4',
-      endTime: 'Completed',
-      maxPlayers: 100,
-      currentPlayers: 86,
-      userJoined: false,
-      standings: [
-        { rank: 1, username: 'VortexStrategist', rating: 1845, score: 44, gamesPlayed: 14, wins: 12, losses: 1, draws: 1 },
-        { rank: 2, username: 'GrandmasterKai', rating: 1930, score: 39, gamesPlayed: 13, wins: 11, losses: 2, draws: 0 },
-        { rank: 3, username: 'MillEmperor', rating: 1860, score: 34, gamesPlayed: 12, wins: 9, losses: 2, draws: 1 },
-      ]
+  useEffect(() => {
+    async function loadTournaments() {
+      if (!isSupabaseConfigured() || !supabase) {
+        if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
+          setTournaments([
+            {
+              id: 'mock_t1',
+              name: 'Dev Arena 9-Piece',
+              description: 'Local development mock tournament',
+              variant: 'MILLS_9',
+              timeControl: '3_MIN',
+              type: 'ARENA',
+              status: 'UPCOMING',
+              startTime: 'Today, 6:00 PM',
+              endTime: 'Today, 7:00 PM',
+              maxPlayers: 32,
+              currentPlayers: 4,
+              userJoined: false,
+            },
+          ]);
+        } else {
+          setTournaments([]);
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('tournaments')
+          .select('*')
+          .order('start_time', { ascending: true });
+
+        if (data && !error) {
+          const mapped: Tournament[] = data.map((t: any) => ({
+            id: t.id,
+            name: t.title || t.name,
+            description: t.description || '',
+            variant: t.variant,
+            timeControl: t.time_control,
+            type: t.type || 'ARENA',
+            status: t.status || 'UPCOMING',
+            startTime: t.start_time ? new Date(t.start_time).toLocaleString() : 'Scheduled',
+            endTime: t.end_time ? new Date(t.end_time).toLocaleString() : 'TBD',
+            maxPlayers: t.max_players || 64,
+            currentPlayers: 0,
+            userJoined: false,
+          }));
+          setTournaments(mapped);
+        } else {
+          setTournaments([]);
+        }
+      } catch (err) {
+        console.warn('[Tournaments] Error fetching tournaments:', err);
+        setTournaments([]);
+      }
     }
-  ]);
+
+    loadTournaments();
+  }, []);
 
   const filteredTournaments = tournaments.filter((t) => {
     if (activeTab === 'upcoming') return t.status === 'UPCOMING';
@@ -119,18 +105,43 @@ export function TournamentsPage() {
         subtitle="Compete in scheduled Arena tournaments, earn championship points, and climb the leaderboard."
       />
 
+      {/* Database Connection Notice */}
+      {!isSupabaseConfigured() && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
+          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900 leading-relaxed">
+            <span className="font-bold block">Database not connected</span>
+            Configure <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to fetch live scheduled tournaments and sync brackets.
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Tabs */}
       <Tabs
         tabs={[
-          { id: 'upcoming', label: 'Upcoming', count: tournaments.filter(t => t.status === 'UPCOMING').length },
-          { id: 'live', label: 'Live Arenas', count: tournaments.filter(t => t.status === 'LIVE').length },
-          { id: 'finished', label: 'Past Arenas', count: tournaments.filter(t => t.status === 'FINISHED').length },
+          { id: 'upcoming', label: 'Upcoming' },
+          { id: 'live', label: 'Live Arenas' },
+          { id: 'finished', label: 'Completed' },
         ]}
         activeTab={activeTab}
         onChange={setActiveTab}
       />
 
-      {/* Tournament Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* Tournament Cards Grid or Empty State */}
+      {filteredTournaments.length === 0 ? (
+        <div className="p-8 text-center bg-white border border-background-border rounded-3xl shadow-soft">
+          <Trophy className="w-10 h-10 mx-auto text-ink-muted mb-2 opacity-50" />
+          <h3 className="font-bold text-ink text-base">
+            {isSupabaseConfigured() ? `No ${activeTab} tournaments` : 'Database Not Connected'}
+          </h3>
+          <p className="text-xs text-ink-muted mt-1 max-w-sm mx-auto">
+            {isSupabaseConfigured()
+              ? `There are currently no ${activeTab} arena tournaments. Check back soon for upcoming events!`
+              : 'Connect Supabase in .env.local to load live competitive tournament schedules and brackets.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filteredTournaments.map((t) => {
           const isLive = t.status === 'LIVE';
           return (
@@ -198,7 +209,8 @@ export function TournamentsPage() {
             </Card>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Tournament Details & Standings Modal */}
       {selectedTournament && (
