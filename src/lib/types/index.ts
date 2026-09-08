@@ -26,6 +26,7 @@ export interface UserProfile {
   displayName: string;
   avatarUrl?: string;
   bio?: string;
+  isUsernameSet?: boolean;
   createdAt: string;
   ratings: UserRating;
   stats: UserStats;

@@ -18,13 +18,7 @@ export function LeaderboardPage() {
   useEffect(() => {
     async function loadLeaderboard() {
       if (!isSupabaseConfigured() || !supabase) {
-        if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
-          setEntries([
-            { rank: 1, username: 'MockLeader', displayName: 'Dev Lead', rating: 1500, gamesCount: 10, winRate: 70 },
-          ]);
-        } else {
-          setEntries([]);
-        }
+        setEntries([]);
         return;
       }
 
@@ -111,19 +105,17 @@ export function LeaderboardPage() {
         onChange={(id) => setActiveVariant(id as GameVariant)}
       />
 
-      {/* Empty / Disconnected State */}
+      {/* Empty Leaderboard State */}
       {currentList.length === 0 ? (
         <Card className="p-8 text-center bg-white border-background-border shadow-soft rounded-3xl">
           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center">
             <Trophy className="w-6 h-6" />
           </div>
           <h3 className="text-base font-bold text-ink">
-            {isSupabaseConfigured() ? 'No Ranked Matches Yet' : 'Database Not Connected'}
+            No Ranked Matches Yet
           </h3>
           <p className="text-xs text-ink-muted max-w-md mx-auto mt-1 leading-relaxed">
-            {isSupabaseConfigured()
-              ? `No ranked matches have been completed for ${activeVariant.replace('_', ' ')} yet. Play the first ranked match to take #1 on the leaderboard!`
-              : 'Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local to load live competitive rankings.'}
+            No ranked matches have been completed for this variant yet. Play a ranked match to claim the #1 spot on the leaderboard!
           </p>
         </Card>
       ) : (

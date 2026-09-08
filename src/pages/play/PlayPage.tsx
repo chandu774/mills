@@ -10,6 +10,7 @@ import { Play, Swords, UserCheck, Shield, Copy, Check, KeyRound, Monitor } from 
 import { cn } from '@/lib/utils';
 import { gameService } from '@/services/games/gameService';
 import { useAuth } from '@/hooks/useAuth';
+import { MatchmakingModal } from '@/components/game/MatchmakingModal';
 
 export function PlayPage() {
   const [searchParams] = useSearchParams();
@@ -29,11 +30,17 @@ export function PlayPage() {
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControl>('5_MIN');
   const [privateLinkCopied, setPrivateLinkCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showMatchmakingModal, setShowMatchmakingModal] = useState(false);
   const [joinCodeInput, setJoinCodeInput] = useState('');
   const [joinError, setJoinError] = useState('');
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   const handleStartGame = async () => {
+    if (selectedMode === 'RANKED' || selectedMode === 'CASUAL') {
+      setShowMatchmakingModal(true);
+      return;
+    }
+
     if (selectedMode === 'PRIVATE') {
       setIsCreatingRoom(true);
       try {
@@ -62,7 +69,7 @@ export function PlayPage() {
       return;
     }
 
-    // Default: Local Pass & Play or Instant Match
+    // Default: Local Pass & Play
     navigate(`/game?variant=${selectedVariant}&time=${selectedTimeControl}&mode=${selectedMode}`);
   };
 
@@ -287,6 +294,15 @@ export function PlayPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Ranked and Casual Online Matchmaking Modal */}
+      <MatchmakingModal
+        isOpen={showMatchmakingModal}
+        onClose={() => setShowMatchmakingModal(false)}
+        variant={selectedVariant}
+        mode={selectedMode}
+        timeControl={selectedTimeControl}
+      />
     </div>
   );
 }

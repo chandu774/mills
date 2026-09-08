@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Tournament } from '@/lib/types';
 import { formatVariantShort, formatTimeControl } from '@/lib/utils';
-import { Trophy, Clock, Users, Flame, CheckCircle, ArrowRight, Database } from 'lucide-react';
+import { Trophy, Clock, Users, Flame, CheckCircle, ArrowRight } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function TournamentsPage() {
@@ -105,17 +105,6 @@ export function TournamentsPage() {
         subtitle="Compete in scheduled Arena tournaments, earn championship points, and climb the leaderboard."
       />
 
-      {/* Database Connection Notice */}
-      {!isSupabaseConfigured() && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
-          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-bold block">Database not connected</span>
-            Configure <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to fetch live scheduled tournaments and sync brackets.
-          </div>
-        </div>
-      )}
-
       {/* Navigation Tabs */}
       <Tabs
         tabs={[
@@ -132,12 +121,10 @@ export function TournamentsPage() {
         <div className="p-8 text-center bg-white border border-background-border rounded-3xl shadow-soft">
           <Trophy className="w-10 h-10 mx-auto text-ink-muted mb-2 opacity-50" />
           <h3 className="font-bold text-ink text-base">
-            {isSupabaseConfigured() ? `No ${activeTab} tournaments` : 'Database Not Connected'}
+            No {activeTab} tournaments
           </h3>
           <p className="text-xs text-ink-muted mt-1 max-w-sm mx-auto">
-            {isSupabaseConfigured()
-              ? `There are currently no ${activeTab} arena tournaments. Check back soon for upcoming events!`
-              : 'Connect Supabase in .env.local to load live competitive tournament schedules and brackets.'}
+            There are currently no {activeTab} arena tournaments scheduled. Check back soon for new events!
           </p>
         </div>
       ) : (

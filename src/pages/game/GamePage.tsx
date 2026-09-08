@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/Button';
 export function GamePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   const variantParam = (searchParams.get('variant') as GameVariant) || 'MILLS_9';
   const timeParam = (searchParams.get('time') as TimeControl) || '5_MIN';
@@ -83,8 +83,9 @@ export function GamePage() {
     setEngineState(newState);
     if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(newState.status)) {
       setShowGameOverModal(true);
+      refreshProfile();
     }
-  }, []);
+  }, [refreshProfile]);
 
   const handleClockUpdate = useCallback((newClocks: { WHITE?: number; BLACK?: number }) => {
     setClocks(newClocks);
@@ -321,8 +322,55 @@ export function GamePage() {
   const bottomColor = isFlipped ? 'BLACK' : 'WHITE';
   const topName = isFlipped ? whiteName : blackName;
   const bottomName = isFlipped ? blackName : whiteName;
-  const topRating = isFlipped ? 1420 : 1380;
-  const bottomRating = isFlipped ? 1380 : 1420;
+  const userRating = useMemo(() => {
+    if (!profile?.ratings) return 1200;
+    if (variantParam === 'MILLS_3') return profile.ratings.mills3;
+    if (variantParam === 'MILLS_6') return profile.ratings.mills6;
+    return profile.ratings.mills9;
+  }, [profile, variantParam]);
+  const opponentRating = opponent?.rating ?? 1200;
+
+  const whiteRating = isMultiplayer
+    ? myColor === 'WHITE'
+      ? userRating
+      : opponentRating
+    : userRating;
+
+  const blackRating = isMultiplayer
+    ? myColor === 'BLACK'
+      ? userRating
+      : opponentRating
+    : userRating;
+
+  const topRating = isFlipped ? whiteRating : blackRating;
+  const bottomRating = isFlipped ? blackRating : whiteRating;
+
+  // Preserve initial rating before match completion updates profile
+  const initialUserRatingRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (profile?.ratings && initialUserRatingRef.current === null) {
+      const currentRating =
+        variantParam === 'MILLS_3'
+          ? profile.ratings.mills3
+          : variantParam === 'MILLS_6'
+            ? profile.ratings.mills6
+            : profile.ratings.mills9;
+      initialUserRatingRef.current = currentRating;
+    }
+  }, [profile, variantParam]);
+
+  const ratingBefore = initialUserRatingRef.current ?? userRating;
+
+  const userRatingDelta = useMemo(() => {
+    if (!room) return undefined;
+    if (myColor === 'WHITE') {
+      return room.whiteRatingChange;
+    } else if (myColor === 'BLACK') {
+      return room.blackRatingChange;
+    }
+    return undefined;
+  }, [room, myColor]);
+
   const topIsOnline = isMultiplayer
     ? isFlipped
       ? myColor === 'WHITE'
@@ -846,6 +894,9 @@ export function GamePage() {
         onNewGame={() => navigate('/play')}
         onReturnHome={() => navigate('/')}
         userColor={isMultiplayer && myColor !== 'SPECTATOR' ? myColor : undefined}
+        isRated={isMultiplayer && room?.mode === 'RANKED'}
+        ratingBefore={ratingBefore}
+        ratingChange={userRatingDelta}
       />
     </div>
   );

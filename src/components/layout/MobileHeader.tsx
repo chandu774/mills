@@ -8,7 +8,7 @@ export interface MobileHeaderProps {
   unreadNotificationsCount?: number;
 }
 
-export function MobileHeader({ onOpenNotifications, onOpenAuth, unreadNotificationsCount = 2 }: MobileHeaderProps) {
+export function MobileHeader({ onOpenNotifications, onOpenAuth, unreadNotificationsCount = 0 }: MobileHeaderProps) {
   const { user, profile } = useAuth();
   return (
     <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-background-border pt-safe px-4 py-2.5 flex items-center justify-between select-none shadow-2xs">

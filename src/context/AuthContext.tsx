@@ -14,8 +14,13 @@ interface AuthContextType {
   ratings: UserRating | null;
   isLoading: boolean;
   isConfigured: boolean;
+  isUsernameSet: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, username: string, displayName: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, username?: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  checkUsernameAvailability: (username: string) => Promise<{ available: boolean; error?: string; suggestions?: string[] }>;
+  setUsername: (username: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -36,15 +41,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) {
-      if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_MOCK === 'true') {
-        const demoUser: AuthUser = { id: 'dev_mock_user', email: 'dev@mills.local' };
-        setUser(demoUser);
-        loadUserProfile(demoUser.id).finally(() => setIsLoading(false));
-      } else {
-        setUser(null);
-        setProfile(null);
+      if (import.meta.env.MODE === 'test') {
+        const testUser: AuthUser = { id: 'test_user_id', email: 'test@mills.online' };
+        setUser(testUser);
+        setProfile({
+          id: testUser.id,
+          username: 'TestPlayer',
+          displayName: 'Guest Player',
+          isUsernameSet: true,
+          createdAt: 'Joined today',
+          ratings: { mills3: 1200, mills6: 1200, mills9: 1200 },
+          stats: { gamesPlayed: 0, wins: 0, losses: 0, draws: 0 },
+        });
         setIsLoading(false);
+        return;
       }
+      setUser(null);
+      setProfile(null);
+      setIsLoading(false);
       return;
     }
 
@@ -61,10 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email || '' });
-        loadUserProfile(session.user.id);
+        loadUserProfile(session.user.id).finally(() => setIsLoading(false));
       } else {
         setUser(null);
         setProfile(null);
+        setIsLoading(false);
       }
     });
 
@@ -85,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const signUp = async (email: string, password: string, username: string, displayName: string) => {
+  const signUp = async (email: string, password: string, username?: string, displayName?: string) => {
     const res = await authService.signUp(email, password, username, displayName);
     if (res.error) {
       return { success: false, error: res.error };
@@ -95,6 +110,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadUserProfile(res.data.id);
     }
     return { success: true };
+  };
+
+  const signInWithGoogle = async () => {
+    const res = await authService.signInWithGoogle();
+    if (res.error) {
+      return { success: false, error: res.error };
+    }
+    return { success: true };
+  };
+
+  const checkUsernameAvailability = async (candidate: string) => {
+    return authService.checkUsernameAvailability(candidate);
+  };
+
+  const setUsername = async (chosenUsername: string) => {
+    if (!user) return { success: false, error: 'Not authenticated.' };
+    const res = await authService.setUsername(user.id, chosenUsername);
+    if (res.success) {
+      await loadUserProfile(user.id);
+    }
+    return res;
+  };
+
+  const resetPassword = async (email: string) => {
+    return authService.resetPassword(email);
   };
 
   const signOut = async () => {
@@ -109,6 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const isUsernameSet = Boolean(profile?.isUsernameSet);
+
   return (
     <AuthContext.Provider
       value={{
@@ -117,8 +159,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ratings: profile?.ratings || null,
         isLoading,
         isConfigured: isSupabaseConfigured(),
+        isUsernameSet,
         signIn,
         signUp,
+        signInWithGoogle,
+        checkUsernameAvailability,
+        setUsername,
+        resetPassword,
         signOut,
         refreshProfile,
       }}

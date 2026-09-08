@@ -52,6 +52,37 @@ export function useMultiplayerGame({
   const engineRef = useRef(engine);
   engineRef.current = engine;
 
+  const completeGame = useCallback(
+    async (winner: PlayerColor | null, reason: string) => {
+      try {
+        const res = await gameService.finishGame({
+          roomId,
+          winner,
+          reason,
+        });
+        if (res && (res.whiteChange !== undefined || res.blackChange !== undefined)) {
+          setRoom((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: 'FINISHED',
+                  winner,
+                  winReason: reason,
+                  whiteRatingChange: res.whiteChange,
+                  blackRatingChange: res.blackChange,
+                }
+              : prev
+          );
+        }
+      } catch (err) {
+        console.warn('[useMultiplayerGame] Error completing game:', err);
+      }
+    },
+    [roomId]
+  );
+  const completeGameRef = useRef(completeGame);
+  completeGameRef.current = completeGame;
+
   // 1. Initialize room metadata & player assignment
   useEffect(() => {
     let isMounted = true;
@@ -158,11 +189,7 @@ export function useMultiplayerGame({
           if (res.success) {
             onEngineStateUpdate(res.state);
             if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(res.state.status)) {
-              gameService.finishGame({
-                roomId,
-                winner: res.state.winner,
-                reason: res.state.winReason || 'Game finished.',
-              });
+              completeGameRef.current(res.state.winner, res.state.winReason || 'Game finished.');
             }
             if (payload.clocks && onClockUpdate) {
               onClockUpdate(payload.clocks);
@@ -174,12 +201,16 @@ export function useMultiplayerGame({
         case 'RESIGN': {
           const res = engineRef.current.resign(payload.player);
           onEngineStateUpdate(res.state);
+          const winner = payload.player === 'WHITE' ? 'BLACK' : 'WHITE';
+          completeGameRef.current(winner, `${payload.player === 'WHITE' ? 'White' : 'Black'} resigned.`);
           break;
         }
 
         case 'TIMEOUT': {
           engineRef.current.timeout(payload.player);
           onEngineStateUpdate(engineRef.current.getState());
+          const winner = payload.player === 'WHITE' ? 'BLACK' : 'WHITE';
+          completeGameRef.current(winner, `${payload.player === 'WHITE' ? 'White' : 'Black'} timed out.`);
           break;
         }
 
@@ -196,6 +227,7 @@ export function useMultiplayerGame({
             state.winner = null;
             state.winReason = 'Players agreed to a draw.';
             onEngineStateUpdate({ ...state });
+            completeGameRef.current(null, 'Players agreed to a draw.');
           }
           break;
         }
@@ -302,6 +334,7 @@ export function useMultiplayerGame({
             const res = engineRef.current.resign(oppColor);
             res.state.winReason = 'Opponent disconnected and forfeited.';
             onEngineStateUpdate({ ...res.state });
+            completeGameRef.current(myColor, 'Opponent disconnected and forfeited.');
           }
           return 0;
         }
@@ -338,14 +371,10 @@ export function useMultiplayerGame({
       });
 
       if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(state.status)) {
-        gameService.finishGame({
-          roomId,
-          winner: state.winner,
-          reason: state.winReason || 'Game finished.',
-        });
+        completeGame(state.winner, state.winReason || 'Game finished.');
       }
     },
-    [roomId]
+    [roomId, completeGame]
   );
 
   const broadcastResign = useCallback(
@@ -355,13 +384,10 @@ export function useMultiplayerGame({
         type: 'RESIGN',
         player,
       });
-      gameService.finishGame({
-        roomId,
-        winner: player === 'WHITE' ? 'BLACK' : 'WHITE',
-        reason: `${player === 'WHITE' ? 'White' : 'Black'} resigned.`,
-      });
+      const winner = player === 'WHITE' ? 'BLACK' : 'WHITE';
+      completeGame(winner, `${player === 'WHITE' ? 'White' : 'Black'} resigned.`);
     },
-    [roomId]
+    [roomId, completeGame]
   );
 
   const offerDraw = useCallback(() => {
@@ -389,14 +415,10 @@ export function useMultiplayerGame({
         state.winner = null;
         state.winReason = 'Players agreed to a draw.';
         onEngineStateUpdate({ ...state });
-        gameService.finishGame({
-          roomId,
-          winner: null,
-          reason: 'Players agreed to a draw.',
-        });
+        completeGame(null, 'Players agreed to a draw.');
       }
     },
-    [myColor, roomId, onEngineStateUpdate]
+    [myColor, onEngineStateUpdate, completeGame]
   );
 
   const offerRematch = useCallback(() => {

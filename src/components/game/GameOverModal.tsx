@@ -11,7 +11,9 @@ export interface GameOverModalProps {
   onRematch: () => void;
   onNewGame: () => void;
   onReturnHome: () => void;
+  ratingBefore?: number;
   ratingChange?: number;
+  isRated?: boolean;
   userColor?: PlayerColor;
 }
 
@@ -23,7 +25,9 @@ export function GameOverModal({
   onRematch,
   onNewGame,
   onReturnHome,
-  ratingChange = 18,
+  ratingBefore,
+  ratingChange,
+  isRated = false,
   userColor,
 }: GameOverModalProps) {
   const isDraw = winner === null;
@@ -59,11 +63,11 @@ export function GameOverModal({
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-ink tracking-tight mt-0.5">
             {isUserWinner
-              ? 'VICTORY!'
+              ? 'YOU WON'
               : isUserLoser
-                ? 'DEFEAT'
+                ? 'YOU LOST'
                 : isDraw
-                  ? 'Game Drawn'
+                  ? 'DRAW'
                   : `${winner} Won!`}
           </h2>
           <p className="text-xs sm:text-sm text-ink-muted mt-1.5 max-w-xs mx-auto leading-relaxed">
@@ -71,21 +75,25 @@ export function GameOverModal({
           </p>
         </div>
 
-        {/* Rating Adjustment Chip */}
-        {!isDraw && (
+        {/* Real Rating Adjustment Chip (Ranked Only) */}
+        {isRated && ratingChange !== undefined && (
           <div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl border font-mono text-sm font-bold shadow-2xs ${
-              isUserWinner
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : isUserLoser
-                  ? 'bg-rose-50 text-rose-700 border-rose-200'
-                  : 'bg-background-elevated text-primary border-background-border'
+            className={`flex flex-col items-center gap-1 px-5 py-2.5 rounded-2xl border font-mono shadow-2xs ${
+              ratingChange > 0
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : ratingChange < 0
+                  ? 'bg-rose-50 text-rose-800 border-rose-200'
+                  : 'bg-background-elevated text-ink-muted border-background-border'
             }`}
           >
-            <span className="text-ink-muted font-sans text-xs font-semibold">Rating Change:</span>
-            <span>
-              {isUserLoser ? `-${Math.max(10, ratingChange - 4)}` : `+${ratingChange}`}
+            <span className="text-base font-black">
+              {ratingChange > 0 ? `+${ratingChange}` : ratingChange} Rating
             </span>
+            {ratingBefore !== undefined && (
+              <span className="text-xs font-semibold opacity-85">
+                {ratingBefore} → {ratingBefore + ratingChange}
+              </span>
+            )}
           </div>
         )}
 

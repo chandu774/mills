@@ -131,6 +131,8 @@ export class GameService {
             fen: data.current_fen || undefined,
             winner: data.winner_id ? (data.winner_id === data.white_player_id ? 'WHITE' : 'BLACK') : null,
             winReason: data.win_reason || undefined,
+            whiteRatingChange: data.white_rating_change ?? undefined,
+            blackRatingChange: data.black_rating_change ?? undefined,
           };
         }
       } catch (err) {
@@ -251,14 +253,14 @@ export class GameService {
   }
 
   /**
-   * Finalizes the game outcome
+   * Finalizes the game outcome atomically
    */
   public async finishGame(params: {
     roomId: string;
     winner: PlayerColor | null;
     reason: string;
     finalFen?: string;
-  }): Promise<void> {
+  }): Promise<{ whiteChange?: number; blackChange?: number }> {
     const room = await this.getRoom(params.roomId);
     if (room) {
       room.status = 'FINISHED';
@@ -269,8 +271,30 @@ export class GameService {
       this.saveLocalRoom(room);
     }
 
+    let whiteChange: number | undefined;
+    let blackChange: number | undefined;
+
     if (isSupabaseConfigured() && supabase) {
       try {
+        // Try atomic finish_game_and_update_ratings RPC
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc('finish_game_and_update_ratings', {
+          p_game_id: params.roomId,
+          p_winner: params.winner,
+          p_reason: params.reason,
+        });
+
+        if (!rpcErr && rpcRes && rpcRes.success) {
+          whiteChange = rpcRes.white_change;
+          blackChange = rpcRes.black_change;
+          if (room) {
+            room.whiteRatingChange = whiteChange;
+            room.blackRatingChange = blackChange;
+            this.saveLocalRoom(room);
+          }
+          return { whiteChange, blackChange };
+        }
+
+        // Direct table update fallback
         const winnerId =
           params.winner === 'WHITE'
             ? room?.hostPlayer.color === 'WHITE'
@@ -291,21 +315,12 @@ export class GameService {
             ended_at: new Date().toISOString(),
           })
           .eq('id', params.roomId);
-
-        // If ranked game and both players are registered UUIDs, update ELO ratings
-        if (room?.mode === 'RANKED' && room.guestPlayer) {
-          await supabase.rpc('update_ratings_after_game', {
-            p_game_id: room.id,
-            p_variant: room.variant,
-            p_white_id: room.hostPlayer.color === 'WHITE' ? room.hostPlayer.id : room.guestPlayer.id,
-            p_black_id: room.hostPlayer.color === 'BLACK' ? room.hostPlayer.id : room.guestPlayer.id,
-            p_winner_id: winnerId,
-          });
-        }
       } catch (err) {
         console.warn('[GameService] Error finalizing game in Supabase:', err);
       }
     }
+
+    return { whiteChange, blackChange };
   }
 
   // --- Local/Memory Storage Helpers ---

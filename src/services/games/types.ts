@@ -31,6 +31,8 @@ export interface GameRoom {
   winReason?: string;
   fen?: string;
   moveCount: number;
+  whiteRatingChange?: number;
+  blackRatingChange?: number;
 }
 
 export type MultiplayerPayload =

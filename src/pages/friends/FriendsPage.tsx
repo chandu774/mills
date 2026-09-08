@@ -8,7 +8,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Friend, FriendRequest, GameVariant, TimeControl } from '@/lib/types';
-import { Search, Swords, UserPlus, Check, X, Clock, Database } from 'lucide-react';
+import { Search, Swords, UserPlus, Check, X, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -116,17 +116,6 @@ export function FriendsPage() {
           </div>
         }
       />
-
-      {/* Database Connection Notice */}
-      {!isSupabaseConfigured() && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
-          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-bold block">Database not connected</span>
-            Configure <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to add friends and sync friend challenges across devices.
-          </div>
-        </div>
-      )}
 
       <Tabs
         tabs={[

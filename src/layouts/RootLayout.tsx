@@ -18,33 +18,8 @@ export function RootLayout() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
-  // Sample platform notifications for Phase 1
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    {
-      id: 'n1',
-      title: 'Friend Challenge Received!',
-      description: 'GrandmasterKai challenged you to a 9-Piece Mills 5-min match.',
-      time: '12m ago',
-      read: false,
-      type: 'challenge',
-    },
-    {
-      id: 'n2',
-      title: 'Arena Tournament Starting Soon',
-      description: 'Saturday Arena Blitz starts in 30 minutes. 64 players registered.',
-      time: '45m ago',
-      read: false,
-      type: 'tournament',
-    },
-    {
-      id: 'n3',
-      title: 'Friend Request Accepted',
-      description: 'TacticalEagle accepted your friendship request.',
-      time: '2h ago',
-      read: true,
-      type: 'friend_request',
-    }
-  ]);
+  // Notifications list (empty until real user events arrive)
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

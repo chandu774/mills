@@ -1,19 +1,17 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Trophy, Users, Swords, Shield, ChevronRight, Database } from 'lucide-react';
+import { Play, Trophy, Users, Swords, Shield, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { RatingBadge } from '@/components/common/RatingBadge';
 import { GameVariant, GameRecord } from '@/lib/types';
 import { formatVariantShort, formatDuration } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { getDatabaseStatus } from '@/lib/supabase/client';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<GameVariant>('MILLS_9');
-  const dbStatus = getDatabaseStatus();
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -38,18 +36,7 @@ export function HomePage() {
       {/* Screen-reader heading for test compatibility & accessibility */}
       <h1 className="sr-only">Play Mills Online</h1>
 
-      {/* Database Connection Notice if not connected */}
-      {!dbStatus.isConfigured && (
-        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 text-left">
-          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-bold block">Database not connected</span>
-            Set <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to enable real user accounts and live cloud matchmaking. Offline Pass & Play is fully playable.
-          </div>
-        </div>
-      )}
-
-      {/* 1. Game Launcher Header: Player Greeting & Database Status */}
+      {/* 1. Game Launcher Header: Player Greeting */}
       <div className="flex items-center justify-between pt-1">
         <div>
           <span className="text-[10px] font-mono tracking-widest uppercase font-bold text-[#C4973B]">
@@ -59,19 +46,7 @@ export function HomePage() {
             {greeting}, {playerName}
           </h2>
         </div>
-        <div>
-          {dbStatus.isConfigured ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-bold text-emerald-800">Database: Connected</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25">
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-[11px] font-bold text-amber-800">Database not connected</span>
-            </div>
-          )}
-        </div>
+        <RatingBadge rating={ratings[selectedVariant]} showTier size="sm" />
       </div>
 
       {/* 2. Hero Game Launcher: Rating Snapshot & Immediate PLAY Action */}
@@ -172,7 +147,7 @@ export function HomePage() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-ink">Challenge a Friend</h3>
-                <p className="text-[11px] text-ink-muted">3 friends online right now</p>
+                <p className="text-[11px] text-ink-muted">Direct match or invite link</p>
               </div>
             </div>
             <Button size="sm" variant="outline" className="h-8 text-xs font-bold gap-1">

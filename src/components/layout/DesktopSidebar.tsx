@@ -10,14 +10,14 @@ export interface DesktopSidebarProps {
   unreadNotificationsCount?: number;
 }
 
-export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotificationsCount = 2 }: DesktopSidebarProps) {
+export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotificationsCount = 0 }: DesktopSidebarProps) {
   const { user, profile, ratings, signOut } = useAuth();
   const navItems = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/play', label: 'Play', icon: Play },
-    { to: '/tournaments', label: 'Tournaments', icon: Trophy, count: 3 },
+    { to: '/tournaments', label: 'Tournaments', icon: Trophy },
     { to: '/leaderboard', label: 'Leaderboards', icon: BarChart2 },
-    { to: '/friends', label: 'Friends', icon: Users, count: 1 },
+    { to: '/friends', label: 'Friends', icon: Users },
     { to: '/rules', label: 'Learn Rules', icon: BookOpen },
     { to: '/profile', label: 'Profile', icon: User },
   ];
@@ -90,11 +90,6 @@ export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotifica
                 <Icon className="h-4 w-4 shrink-0" />
                 <span>{item.label}</span>
               </div>
-              {item.count !== undefined && (
-                <span className="text-[11px] font-bold bg-background-elevated px-2 py-0.5 rounded-full text-ink-muted">
-                  {item.count}
-                </span>
-              )}
             </NavLink>
           );
         })}
@@ -130,7 +125,7 @@ export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotifica
                   {profile?.displayName?.[0] || 'U'}
                 </div>
                 <span className="text-xs font-bold text-ink truncate">
-                  {profile?.displayName || 'Player'}
+                  @{profile?.username || 'player'}
                 </span>
               </NavLink>
               <button

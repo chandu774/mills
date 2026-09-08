@@ -7,7 +7,7 @@ import { StatCard } from '@/components/common/StatCard';
 import { Tabs } from '@/components/ui/Tabs';
 import { GameRecord, UserProfile } from '@/lib/types';
 import { formatVariantShort, formatDuration } from '@/lib/utils';
-import { Trophy, Swords, Calendar, Award, TrendingUp, ShieldCheck, ExternalLink, Database } from 'lucide-react';
+import { Trophy, Swords, Calendar, Award, TrendingUp, ShieldCheck, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
@@ -96,17 +96,6 @@ export function ProfilePage() {
     : 0;
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200">
-      {/* Database Connection Notice */}
-      {!isSupabaseConfigured() && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
-          <Database className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-bold block">Database not connected</span>
-            Configure <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_URL</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[10px]">.env.local</code> to link real player profiles, authentic ratings, and cloud match history.
-          </div>
-        </div>
-      )}
-
       {/* Profile Header Banner */}
       <div className="rounded-3xl border border-background-border bg-white p-4 sm:p-6 md:p-8 shadow-soft">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
