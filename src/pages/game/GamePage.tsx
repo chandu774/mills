@@ -9,6 +9,7 @@ import { TurnStatusBar } from '@/components/game/TurnStatusBar';
 import { GameControls } from '@/components/game/GameControls';
 import { MoveHistoryView } from '@/components/game/MoveHistoryView';
 import { GameOverModal } from '@/components/game/GameOverModal';
+import { InGameChat, InGameChatMessage } from '@/components/game/InGameChat';
 import { Drawer } from '@/components/ui/Drawer';
 import { useAuth } from '@/hooks/useAuth';
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame';
@@ -21,8 +22,8 @@ import {
   RotateCcw,
   WifiOff,
   History,
-  Info,
   BookOpen,
+  MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -57,7 +58,9 @@ export function GamePage() {
   const [currentReplayIndex, setCurrentReplayIndex] = useState<number | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [mobileDrawerTab, setMobileDrawerTab] = useState<'moves' | 'info' | 'rules' | null>(null);
+  const [mobileDrawerTab, setMobileDrawerTab] = useState<'moves' | 'chat' | 'info' | 'rules' | null>(null);
+  const [desktopSideTab, setDesktopSideTab] = useState<'moves' | 'chat'>('moves');
+  const [localChatMessages, setLocalChatMessages] = useState<InGameChatMessage[]>([]);
 
   // Clocks for White and Black
   const [clocks, setClocks] = useState<{ WHITE?: number; BLACK?: number }>({
@@ -98,6 +101,8 @@ export function GamePage() {
     outgoingDrawOffer,
     incomingRematchOffer,
     outgoingRematchOffer,
+    chatMessages: multiplayerChatMessages,
+    sendChatMessage: sendMultiplayerChat,
     broadcastMove,
     broadcastResign,
     offerDraw,
@@ -111,6 +116,26 @@ export function GamePage() {
     onEngineStateUpdate: handleEngineStateUpdate,
     onClockUpdate: handleClockUpdate,
   });
+
+  const activeChatMessages = isMultiplayer ? multiplayerChatMessages : localChatMessages;
+
+  const handleSendChat = useCallback(
+    (text: string) => {
+      if (isMultiplayer) {
+        sendMultiplayerChat(text);
+      } else {
+        const newMsg: InGameChatMessage = {
+          id: `${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          senderName: engineState.currentPlayer === 'WHITE' ? 'White' : 'Black',
+          message: text,
+          timestamp: Date.now(),
+          isSelf: true,
+        };
+        setLocalChatMessages((prev) => [...prev, newMsg]);
+      }
+    },
+    [isMultiplayer, sendMultiplayerChat, engineState.currentPlayer]
+  );
 
   // Auto flip board for Black player in multiplayer
   useEffect(() => {
@@ -584,17 +609,52 @@ export function GamePage() {
           )}
         </div>
 
-        {/* RIGHT AREA (Col 3): Moves, Match Info & Details */}
-        <div className="md:col-span-3 lg:col-span-3 flex flex-col space-y-4 h-[580px]">
-          <MoveHistoryView
-            history={engineRef.current.getHistory()}
-            currentReplayIndex={currentReplayIndex}
-            onSelectMove={(idx) => setCurrentReplayIndex(idx)}
-            className="flex-1"
-          />
+        {/* RIGHT AREA (Col 3): Moves, In-Game Chat & Match Details */}
+        <div className="md:col-span-3 lg:col-span-3 flex flex-col space-y-3 h-[580px]">
+          {/* Tab Switcher: Moves vs Chat */}
+          <div className="flex rounded-xl bg-background-elevated p-1 border border-background-border shrink-0">
+            <button
+              onClick={() => setDesktopSideTab('moves')}
+              className={`flex-1 py-1 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                desktopSideTab === 'moves'
+                  ? 'bg-white text-ink shadow-2xs'
+                  : 'text-ink-muted hover:text-ink'
+              }`}
+            >
+              <History className="h-3.5 w-3.5 text-primary" />
+              <span>Moves ({engineRef.current.getHistory().length})</span>
+            </button>
+            <button
+              onClick={() => setDesktopSideTab('chat')}
+              className={`flex-1 py-1 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                desktopSideTab === 'chat'
+                  ? 'bg-white text-ink shadow-2xs'
+                  : 'text-ink-muted hover:text-ink'
+              }`}
+            >
+              <MessageCircle className="h-3.5 w-3.5 text-gold" />
+              <span>Chat {activeChatMessages.length > 0 && `(${activeChatMessages.length})`}</span>
+            </button>
+          </div>
+
+          {desktopSideTab === 'moves' ? (
+            <MoveHistoryView
+              history={engineRef.current.getHistory()}
+              currentReplayIndex={currentReplayIndex}
+              onSelectMove={(idx) => setCurrentReplayIndex(idx)}
+              className="flex-1"
+            />
+          ) : (
+            <InGameChat
+              messages={activeChatMessages}
+              onSendMessage={handleSendChat}
+              isMultiplayer={isMultiplayer}
+              className="flex-1"
+            />
+          )}
 
           {/* Quick Rules Info Box */}
-          <div className="p-3.5 rounded-2xl bg-white border border-background-border text-xs text-ink-muted space-y-1.5 shadow-soft">
+          <div className="p-3 rounded-2xl bg-white border border-background-border text-xs text-ink-muted space-y-1 shadow-soft shrink-0">
             <div className="flex items-center gap-1.5 font-bold text-ink">
               <BookOpen className="h-3.5 w-3.5 text-primary" />
               <span>Variant Rules</span>
@@ -681,7 +741,7 @@ export function GamePage() {
           myColor={myColor === 'SPECTATOR' ? undefined : myColor}
         />
 
-        {/* 6. Secondary In-Game Drawer Controls: Moves | Game Info | Rules */}
+        {/* 6. Secondary In-Game Drawer Controls: Moves | Chat | Rules & Info */}
         <div className="grid grid-cols-3 gap-1.5 pt-0.5">
           <button
             onClick={() => setMobileDrawerTab('moves')}
@@ -692,11 +752,14 @@ export function GamePage() {
           </button>
 
           <button
-            onClick={() => setMobileDrawerTab('info')}
-            className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-white border border-background-border text-[11px] font-semibold text-ink-muted hover:text-ink active:bg-background-elevated shadow-2xs transition-colors cursor-pointer"
+            onClick={() => setMobileDrawerTab('chat')}
+            className="flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-white border border-background-border text-[11px] font-semibold text-ink-muted hover:text-ink active:bg-background-elevated shadow-2xs transition-colors cursor-pointer relative"
           >
-            <Info className="h-3.5 w-3.5 text-gold shrink-0" />
-            <span className="truncate">Game Info</span>
+            <MessageCircle className="h-3.5 w-3.5 text-gold shrink-0" />
+            <span className="truncate">Chat</span>
+            {activeChatMessages.length > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+            )}
           </button>
 
           <button
@@ -709,16 +772,16 @@ export function GamePage() {
         </div>
       </div>
 
-      {/* Mobile Bottom Sheet Drawer for Moves / Info / Rules */}
+      {/* Mobile Bottom Sheet Drawer for Moves / Chat / Rules */}
       <Drawer
         isOpen={mobileDrawerTab !== null}
         onClose={() => setMobileDrawerTab(null)}
         title={
           mobileDrawerTab === 'moves'
             ? 'Move Log & Replay'
-            : mobileDrawerTab === 'info'
-              ? 'Match Information'
-              : 'Variant Rules'
+            : mobileDrawerTab === 'chat'
+              ? 'Game Chat'
+              : 'Variant Rules & Info'
         }
       >
         {mobileDrawerTab === 'moves' && (
@@ -735,32 +798,34 @@ export function GamePage() {
           </div>
         )}
 
-        {mobileDrawerTab === 'info' && (
-          <div className="space-y-3 text-sm py-2">
-            <div className="flex justify-between py-2 border-b border-background-border">
-              <span className="text-ink-muted">Game Variant</span>
-              <strong className="text-ink">{engineRef.current.config.name}</strong>
-            </div>
-            <div className="flex justify-between py-2 border-b border-background-border">
-              <span className="text-ink-muted">Time Control</span>
-              <strong className="text-ink">{timeParam.replace('_', ' ')}</strong>
-            </div>
-            <div className="flex justify-between py-2 border-b border-background-border">
-              <span className="text-ink-muted">Mode</span>
-              <strong className="text-ink">{isMultiplayer ? 'Online Multiplayer' : 'Local Pass & Play'}</strong>
-            </div>
-            {isMultiplayer && room && (
-              <div className="flex justify-between py-2 border-b border-background-border">
-                <span className="text-ink-muted">Room Code</span>
-                <strong className="font-mono text-primary">{room.code}</strong>
-              </div>
-            )}
+        {mobileDrawerTab === 'chat' && (
+          <div className="h-[380px]">
+            <InGameChat
+              messages={activeChatMessages}
+              onSendMessage={handleSendChat}
+              isMultiplayer={isMultiplayer}
+              className="h-full"
+            />
           </div>
         )}
 
         {mobileDrawerTab === 'rules' && (
           <div className="space-y-3 text-xs text-ink-muted leading-relaxed py-2">
-            <h4 className="font-bold text-sm text-ink">{engineRef.current.config.name} Overview</h4>
+            <div className="flex justify-between py-1.5 border-b border-background-border text-ink">
+              <span>Game Variant</span>
+              <strong>{engineRef.current.config.name}</strong>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-background-border text-ink">
+              <span>Time Control</span>
+              <strong>{timeParam.replace('_', ' ')}</strong>
+            </div>
+            {isMultiplayer && room && (
+              <div className="flex justify-between py-1.5 border-b border-background-border text-ink">
+                <span>Room Code</span>
+                <strong className="font-mono text-primary">{room.code}</strong>
+              </div>
+            )}
+            <h4 className="font-bold text-sm text-ink pt-1">{engineRef.current.config.name} Overview</h4>
             <p>
               <strong>Placing Phase:</strong> Players take turns placing one piece at any empty intersection point. Forming 3 pieces in a straight line forms a <em>mill</em>, which grants an immediate capture of any opponent piece not in an active mill.
             </p>
@@ -788,6 +853,7 @@ export function GamePage() {
         onRematch={handleRestartGame}
         onNewGame={() => navigate('/play')}
         onReturnHome={() => navigate('/')}
+        userColor={isMultiplayer && myColor !== 'SPECTATOR' ? myColor : undefined}
       />
     </div>
   );

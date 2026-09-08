@@ -5,6 +5,15 @@ import { gameService } from '@/services/games/gameService';
 import { GameEngine } from '@/game/engine/GameEngine';
 import { PlayerColor, PlayerMove, GameState } from '@/game/engine/types';
 
+export interface GameChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  message: string;
+  timestamp: number;
+  isSelf: boolean;
+}
+
 export interface UseMultiplayerGameProps {
   roomId: string;
   user: {
@@ -36,6 +45,7 @@ export function useMultiplayerGame({
   const [outgoingDrawOffer, setOutgoingDrawOffer] = useState(false);
   const [incomingRematchOffer, setIncomingRematchOffer] = useState(false);
   const [outgoingRematchOffer, setOutgoingRematchOffer] = useState(false);
+  const [chatMessages, setChatMessages] = useState<GameChatMessage[]>([]);
 
   const channelRef = useRef<RealtimeGameChannel | null>(null);
   const opponentLastSeenRef = useRef<number>(Date.now());
@@ -203,6 +213,23 @@ export function useMultiplayerGame({
             opponentLastSeenRef.current = Date.now();
             setOpponent((prev) => (prev ? { ...prev, isOnline: true } : prev));
             setDisconnectCountdown(null);
+          }
+          break;
+        }
+
+        case 'CHAT': {
+          if (payload.senderId !== user.id) {
+            setChatMessages((prev) => [
+              ...prev,
+              {
+                id: `${payload.timestamp}_${Math.random()}`,
+                senderId: payload.senderId,
+                senderName: payload.senderName,
+                message: payload.message,
+                timestamp: payload.timestamp,
+                isSelf: false,
+              },
+            ]);
           }
           break;
         }
@@ -381,6 +408,32 @@ export function useMultiplayerGame({
     []
   );
 
+  const sendChatMessage = useCallback(
+    (msgText: string) => {
+      const trimmed = msgText.trim();
+      if (!trimmed) return;
+      const chatEntry: GameChatMessage = {
+        id: `${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        senderId: user.id,
+        senderName: user.displayName,
+        message: trimmed,
+        timestamp: Date.now(),
+        isSelf: true,
+      };
+      setChatMessages((prev) => [...prev, chatEntry]);
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'CHAT',
+          senderId: user.id,
+          senderName: user.displayName,
+          message: trimmed,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [user.id, user.displayName]
+  );
+
   const isMyTurn =
     myColor !== 'SPECTATOR' &&
     engineRef.current.getState().currentPlayer === myColor &&
@@ -399,6 +452,8 @@ export function useMultiplayerGame({
     outgoingDrawOffer,
     incomingRematchOffer,
     outgoingRematchOffer,
+    chatMessages,
+    sendChatMessage,
     broadcastMove,
     broadcastResign,
     offerDraw,

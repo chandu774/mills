@@ -5,16 +5,16 @@ import { MobileHeader } from '@/components/layout/MobileHeader';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { NotificationModal } from '@/components/layout/NotificationModal';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { SplashScreen } from '@/components/common/SplashScreen';
 import { usePWA } from '@/hooks/usePWA';
 import { AppNotification } from '@/lib/types';
-import { WifiOff, Download } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function RootLayout() {
   const location = useLocation();
   const isGameRoute = location.pathname.startsWith('/game');
-  const { isOnline, isInstallable, installApp } = usePWA();
+  const { isOnline } = usePWA();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
@@ -53,7 +53,10 @@ export function RootLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-ink flex flex-col md:flex-row antialiased">
+    <div className="min-h-screen bg-background text-ink flex flex-col md:flex-row antialiased select-none">
+      {/* App Launch Splash Screen */}
+      <SplashScreen />
+
       {/* Offline banner */}
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-alert-danger text-white text-xs font-semibold py-1 px-4 text-center flex items-center justify-center gap-2 shadow-md">
@@ -62,7 +65,7 @@ export function RootLayout() {
         </div>
       )}
 
-      {/* Desktop Left Sidebar */}
+      {/* Desktop Left Sidebar (App Rail on Large Displays) */}
       <DesktopSidebar
         onOpenNotifications={() => setIsNotificationOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
@@ -80,33 +83,20 @@ export function RootLayout() {
 
       {/* Main View Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto min-h-screen">
-        {/* PWA Install Banner */}
-        {isInstallable && !isGameRoute && (
-          <div className="bg-primary-subtle border-b border-primary/20 px-4 py-2 flex items-center justify-between text-xs text-primary font-medium">
-            <div className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              <span>Install Mills on your device for instant offline launch and full screen!</span>
-            </div>
-            <Button size="sm" variant="primary" onClick={installApp} className="py-1 px-3 min-h-[32px] text-xs">
-              Install App
-            </Button>
-          </div>
-        )}
-
         {/* Dynamic Page Router Outlet */}
         <main
           className={cn(
             "flex-1 w-full mx-auto",
             isGameRoute
               ? "px-2 py-1.5 sm:px-3 sm:py-3 md:p-6 max-w-7xl pb-4 md:pb-8"
-              : "p-4 md:p-8 max-w-7xl pb-safe-nav md:pb-8"
+              : "px-3 py-3 sm:px-4 sm:py-4 md:p-8 max-w-6xl pb-24 md:pb-8"
           )}
         >
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation: Hidden on active game screen to prevent accidental navigation & give board full height */}
+      {/* Mobile Bottom Navigation: Persistent 5-tab game navigation; hidden on active game for immersion */}
       {!isGameRoute && <MobileBottomNav />}
 
       {/* Notifications Dialog */}

@@ -77,6 +77,13 @@ export type MultiplayerPayload =
       timestamp: number;
     }
   | {
+      type: 'CHAT';
+      senderId: string;
+      senderName: string;
+      message: string;
+      timestamp: number;
+    }
+  | {
       type: 'PLAYER_DISCONNECT';
       playerId: string;
       color: PlayerColor;

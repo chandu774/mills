@@ -113,7 +113,7 @@ export function TournamentsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200">
       <PageHeader
         title="Tournaments Hub"
         subtitle="Compete in scheduled Arena tournaments, earn championship points, and climb the leaderboard."

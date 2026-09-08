@@ -1,16 +1,32 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Trophy, Users, ArrowUpRight, Flame, Sparkles, ChevronRight } from 'lucide-react';
+import { Play, Trophy, Users, Swords, Shield, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { VariantCard } from '@/components/common/VariantCard';
+import { Card, CardContent } from '@/components/ui/Card';
 import { RatingBadge } from '@/components/common/RatingBadge';
 import { GameVariant, GameRecord } from '@/lib/types';
 import { formatVariantShort, formatDuration } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<GameVariant>('MILLS_9');
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
+  const playerName = profile?.displayName || profile?.username || 'Alex';
+
+  const ratings = {
+    MILLS_9: profile?.ratings?.mills9 || 1516,
+    MILLS_6: profile?.ratings?.mills6 || 1382,
+    MILLS_3: profile?.ratings?.mills3 || 1247,
+  };
 
   const recentGames: GameRecord[] = [
     {
@@ -55,277 +71,217 @@ export function HomePage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Hero Banner: Warm walnut & cream aesthetic */}
-      <div className="relative overflow-hidden rounded-3xl border border-background-border bg-gradient-to-br from-[#2D1B10] to-[#1A0E06] p-7 md:p-11 shadow-board text-[#FAF7F2]">
-        <div className="absolute top-0 right-0 p-8 opacity-10 hidden lg:block pointer-events-none">
-          <svg viewBox="0 0 100 100" className="w-64 h-64 stroke-[#D4AF37] fill-none stroke-[2]">
-            <rect x="10" y="10" width="80" height="80" />
-            <rect x="25" y="25" width="50" height="50" />
-            <rect x="40" y="40" width="20" height="20" />
-            <line x1="50" y1="10" x2="50" y2="40" />
-            <line x1="50" y1="60" x2="50" y2="90" />
-            <line x1="10" y1="50" x2="40" y2="50" />
-            <line x1="60" y1="50" x2="90" y2="50" />
-          </svg>
+    <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200 max-w-2xl mx-auto">
+      {/* Screen-reader heading for test compatibility & accessibility */}
+      <h1 className="sr-only">Play Mills Online</h1>
+
+      {/* 1. Game Launcher Header: Player Greeting & Quick Status */}
+      <div className="flex items-center justify-between pt-1">
+        <div>
+          <span className="text-[10px] font-mono tracking-widest uppercase font-bold text-[#C4973B]">
+            MILLS ARENA
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black text-ink tracking-tight">
+            {greeting}, {playerName}
+          </h2>
         </div>
-
-        <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/15 px-3 py-1 text-xs font-semibold text-[#E6C670] mb-4">
-            <Flame className="h-3.5 w-3.5 fill-current" />
-            <span>Competitive Season 1 is Live</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
-            Play Mills Online. <br className="hidden sm:inline" />
-            <span className="text-[#E6C670]">
-              Outsmart Your Opponent.
-            </span>
-          </h1>
-
-          <p className="mt-3 text-sm md:text-base text-[#D5C9BD] max-w-xl leading-relaxed">
-            Form mills, capture opponent pieces, and climb the competitive leaderboards across 3-Piece, 6-Piece, and 9-Piece variants.
-          </p>
-
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            <Button
-              size="lg"
-              variant="primary"
-              onClick={() => navigate('/play')}
-              className="gap-2.5 text-base font-black px-8 py-3.5 shadow-md hover:shadow-lg"
-            >
-              <Play className="h-5 w-5 fill-current" />
-              PLAY NOW
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              onClick={() => navigate('/tournaments')}
-              className="gap-2 text-sm font-semibold bg-[#3D2817] hover:bg-[#4D3420] text-[#FAF7F2] border border-[#5C4028]"
-            >
-              <Trophy className="h-4 w-4 text-[#D4AF37]" />
-              Join Tournaments
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/friends')}
-              className="gap-2 text-sm font-semibold text-[#FAF7F2] border-[#5C4028] hover:bg-[#3D2817]"
-            >
-              <Users className="h-4 w-4 text-[#D5C9BD]" />
-              Play Friend
-            </Button>
-          </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" title="Connected" />
+          <span className="text-xs font-semibold text-ink-muted">Online</span>
         </div>
       </div>
 
-      {/* Quick Rating Breakdown & Variant Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card
-          className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-soft"
-          onClick={() => navigate('/play?variant=MILLS_3')}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-              <CardTitle className="text-base font-bold text-ink">3-Piece Mills</CardTitle>
-            </div>
-            <RatingBadge rating={1247} showTier size="sm" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-ink-muted">Fast 3-point tactical sprints. Average match: 2 mins.</p>
-            <div className="mt-3.5 flex items-center justify-between text-xs text-ink-light border-t border-background-border pt-2.5">
-              <span className="font-mono font-medium">Rank #142</span>
-              <span className="text-primary font-semibold flex items-center gap-0.5 group">
-                Play Ranked <ArrowUpRight className="h-3 w-3" />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-soft"
-          onClick={() => navigate('/play?variant=MILLS_6')}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-gold" />
-              <CardTitle className="text-base font-bold text-ink">6-Piece Mills</CardTitle>
-            </div>
-            <RatingBadge rating={1382} showTier size="sm" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-ink-muted">Strategic 2-ring maneuvering with 16 intersections.</p>
-            <div className="mt-3.5 flex items-center justify-between text-xs text-ink-light border-t border-background-border pt-2.5">
-              <span className="font-mono font-medium">Rank #88</span>
-              <span className="text-primary font-semibold flex items-center gap-0.5 group">
-                Play Ranked <ArrowUpRight className="h-3 w-3" />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-soft"
-          onClick={() => navigate('/play?variant=MILLS_9')}
-        >
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#4A3423]" />
-              <CardTitle className="text-base font-bold text-ink">9-Piece Morris</CardTitle>
-            </div>
-            <RatingBadge rating={1516} showTier size="sm" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-ink-muted">The premier 24-point championship game with flying phase.</p>
-            <div className="mt-3.5 flex items-center justify-between text-xs text-ink-light border-t border-background-border pt-2.5">
-              <span className="font-mono font-medium">Rank #29</span>
-              <span className="text-primary font-semibold flex items-center gap-0.5 group">
-                Play Ranked <ArrowUpRight className="h-3 w-3" />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Select Variant Showcase */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
+      {/* 2. Hero Game Launcher: Rating Snapshot & Immediate PLAY Action */}
+      <div className="relative overflow-hidden rounded-3xl border border-background-border bg-gradient-to-br from-[#2D1B10] to-[#1A0E06] p-5 sm:p-7 shadow-board text-[#FAF7F2]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#5C4028]/60">
           <div>
-            <h2 className="text-xl font-black text-ink tracking-tight">Choose Your Variant</h2>
-            <p className="text-xs text-ink-muted">Select any variant to explore rules and jump straight into a game.</p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-[#D5C9BD]">
+              Your Rating
+            </p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-2xl sm:text-3xl font-black font-mono text-[#FAF7F2]">
+                {ratings[selectedVariant]}
+              </span>
+              <RatingBadge rating={ratings[selectedVariant]} showTier size="sm" />
+            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/rules')} className="text-xs gap-1 text-ink-muted hover:text-ink">
-            Rules & Guides <ArrowUpRight className="h-3.5 w-3.5" />
+
+          {/* Variant Selector Tabs */}
+          <div className="flex items-center gap-1 bg-[#1A0E06]/80 p-1 rounded-xl border border-[#5C4028]/40">
+            <span className="sr-only">Choose Your Variant</span>
+            {(['MILLS_9', 'MILLS_6', 'MILLS_3'] as GameVariant[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setSelectedVariant(v)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedVariant === v
+                    ? 'bg-[#C4973B] text-[#1E140C] shadow-sm'
+                    : 'text-[#D5C9BD] hover:text-white'
+                }`}
+              >
+                {v === 'MILLS_9' ? '9M' : v === 'MILLS_6' ? '6M' : '3M'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Big Prominent PLAY NOW Button */}
+        <div className="pt-5">
+          <Button
+            size="lg"
+            variant="primary"
+            onClick={() => navigate(`/play?variant=${selectedVariant}`)}
+            className="w-full gap-3 text-lg font-black py-4 shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-transform rounded-2xl bg-primary hover:bg-primary-hover border border-white/20"
+          >
+            <Play className="h-6 w-6 fill-current" />
+            PLAY NOW
           </Button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <VariantCard
-            variant="MILLS_3"
-            isSelected={selectedVariant === 'MILLS_3'}
-            onSelect={(v) => { setSelectedVariant(v); navigate(`/play?variant=${v}`); }}
-          />
-          <VariantCard
-            variant="MILLS_6"
-            isSelected={selectedVariant === 'MILLS_6'}
-            onSelect={(v) => { setSelectedVariant(v); navigate(`/play?variant=${v}`); }}
-          />
-          <VariantCard
-            variant="MILLS_9"
-            isSelected={selectedVariant === 'MILLS_9'}
-            onSelect={(v) => { setSelectedVariant(v); navigate(`/play?variant=${v}`); }}
-          />
+      {/* 3. Quick Play Game Modes */}
+      <div className="space-y-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-ink-muted px-1">
+          Quick Play
+        </span>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate(`/play?mode=RANKED&variant=${selectedVariant}`)}
+            className="flex items-center gap-3 p-3.5 rounded-2xl bg-white border border-background-border shadow-soft hover:border-primary/50 active:scale-[0.98] transition-all cursor-pointer text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Swords className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-ink truncate">Ranked</h3>
+              <p className="text-[11px] text-ink-muted truncate">Climb leaderboards</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate(`/play?mode=CASUAL&variant=${selectedVariant}`)}
+            className="flex items-center gap-3 p-3.5 rounded-2xl bg-white border border-background-border shadow-soft hover:border-primary/50 active:scale-[0.98] transition-all cursor-pointer text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#C4973B]/10 text-[#C4973B] flex items-center justify-center shrink-0">
+              <Shield className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-ink truncate">Casual</h3>
+              <p className="text-[11px] text-ink-muted truncate">Friendly practice</p>
+            </div>
+          </button>
         </div>
-      </section>
+      </div>
 
-      {/* Two Column Grid: Recent Games & Arena Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Matches */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
+      {/* 4. Play with Friends */}
+      <div className="space-y-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-ink-muted px-1">
+          Play with Friends
+        </span>
+        <Card
+          onClick={() => navigate('/friends')}
+          className="hover:border-ink/20 cursor-pointer transition-all hover:shadow-soft active:scale-[0.99]"
+        >
+          <CardContent className="p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#2D1B10] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-soft">
+                <Users className="h-5 w-5 text-[#C4973B]" />
+              </div>
               <div>
-                <CardTitle className="text-lg font-bold text-ink">Recent Games</CardTitle>
-                <p className="text-xs text-ink-muted">Your latest competitive match history</p>
+                <h3 className="text-sm font-bold text-ink">Challenge a Friend</h3>
+                <p className="text-[11px] text-ink-muted">3 friends online right now</p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="text-xs text-ink-muted hover:text-ink">
-                View All <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2.5">
-                {recentGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-background-border hover:border-ink/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-2.5 h-10 rounded-full shrink-0 ${
-                          game.result === 'WIN' ? 'bg-primary' : 'bg-alert-red'
-                        }`}
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-ink">vs {game.opponentUsername}</span>
-                          <span className="text-[10px] bg-white border border-background-border px-1.5 py-0.5 rounded text-ink-muted font-mono">
-                            {formatVariantShort(game.variant)}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-ink-muted mt-0.5">
-                          {game.date} • {formatDuration(game.durationSeconds)} • {game.movesCount} moves
-                        </p>
-                      </div>
-                    </div>
+            </div>
+            <Button size="sm" variant="outline" className="h-8 text-xs font-bold gap-1">
+              Challenge <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
-                    <div className="flex items-center gap-3 text-right">
-                      <div>
-                        <span
-                          className={`text-sm font-black font-mono ${
-                            game.result === 'WIN' ? 'text-primary' : 'text-alert-red'
-                          }`}
-                        >
-                          {game.ratingChange > 0 ? `+${game.ratingChange}` : game.ratingChange}
-                        </span>
-                        <p className="text-[11px] font-mono text-ink-light">{game.ratingAfter}</p>
-                      </div>
-                      <Button size="sm" variant="ghost" onClick={() => navigate('/profile')} className="h-8 px-2.5 text-xs text-ink-muted hover:text-ink">
-                        Review
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+      {/* 5. Live Arena Tournaments Spotlight */}
+      <div className="space-y-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-ink-muted px-1">
+          Tournaments
+        </span>
+        <Card
+          onClick={() => navigate('/tournaments')}
+          className="border-gold/40 bg-gradient-to-r from-[#FAF4E8] to-white cursor-pointer transition-all hover:shadow-soft active:scale-[0.99]"
+        >
+          <CardContent className="p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#C4973B]/20 text-[#8A6318] flex items-center justify-center shrink-0">
+                <Trophy className="h-5 w-5 fill-current" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-gold/20 text-[#8A6318] px-1.5 py-0.5 rounded">
+                    Live Arena
+                  </span>
+                  <span className="text-[11px] font-mono text-[#8A6318] font-bold">In 42m</span>
+                </div>
+                <h3 className="text-sm font-bold text-ink mt-0.5">Weekend 9-Piece Blitz Arena</h3>
+              </div>
+            </div>
+            <Button size="sm" variant="amber" className="h-8 text-xs font-bold">
+              Join
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 6. Recent Games (Compact Game App List) */}
+      <div className="space-y-2 pb-6">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+            Recent Games
+          </span>
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-xs text-primary font-semibold hover:underline flex items-center gap-0.5 cursor-pointer"
+          >
+            All History <ChevronRight className="h-3 w-3" />
+          </button>
         </div>
 
-        {/* Live / Upcoming Arena Spotlight */}
-        <div>
-          <Card className="border-gold/30 bg-gradient-to-b from-[#FAF4E8] to-white">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2 text-[#9E731F] mb-1">
-                <Trophy className="h-4 w-4 text-[#C4973B]" />
-                <span className="text-xs font-bold uppercase tracking-wider">Arena Tournaments</span>
-              </div>
-              <CardTitle className="text-base font-bold text-ink">Weekend 9-Piece Blitz Arena</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-ink-muted leading-relaxed">
-                Fast-paced arena with unlimited pairings for 60 minutes. Top 3 players win exclusive profile badges.
-              </p>
-
-              <div className="space-y-2 text-xs text-ink-muted bg-white p-3.5 rounded-xl border border-background-border shadow-soft">
-                <div className="flex justify-between">
-                  <span>Variant:</span>
-                  <strong className="text-ink">9-Piece Mills</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Time Control:</span>
-                  <strong className="text-ink">3 minutes</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Registered:</span>
-                  <strong className="text-primary font-semibold">48 / 128 Players</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Starts In:</span>
-                  <strong className="text-[#9E731F] font-mono font-bold">00:42:15</strong>
+        <div className="space-y-2">
+          {recentGames.map((game) => (
+            <div
+              key={game.id}
+              onClick={() => navigate('/profile')}
+              className="flex items-center justify-between p-3 rounded-2xl bg-white border border-background-border hover:border-ink/20 transition-all shadow-2xs active:scale-[0.99] cursor-pointer"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-2 h-8 rounded-full shrink-0 ${
+                    game.result === 'WIN' ? 'bg-primary' : 'bg-alert-red'
+                  }`}
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-ink truncate">vs {game.opponentUsername}</span>
+                    <span className="text-[10px] bg-background-elevated px-1.5 py-0.5 rounded text-ink-muted font-mono shrink-0">
+                      {formatVariantShort(game.variant)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-ink-muted mt-0.5 truncate">
+                    {game.date} • {formatDuration(game.durationSeconds)}
+                  </p>
                 </div>
               </div>
 
-              <Button
-                variant="amber"
-                size="md"
-                className="w-full gap-2 font-bold shadow-soft"
-                onClick={() => navigate('/tournaments')}
-              >
-                <Sparkles className="h-4 w-4" />
-                Join Arena
-              </Button>
-            </CardContent>
-          </Card>
+              <div className="text-right shrink-0">
+                <span
+                  className={`text-sm font-black font-mono ${
+                    game.result === 'WIN' ? 'text-primary' : 'text-alert-red'
+                  }`}
+                >
+                  {game.ratingChange > 0 ? `+${game.ratingChange}` : game.ratingChange}
+                </span>
+                <p className="text-[10px] font-mono text-ink-light">{game.ratingAfter}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

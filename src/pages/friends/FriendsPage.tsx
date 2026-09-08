@@ -96,7 +96,7 @@ export function FriendsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200">
       <PageHeader
         title="Friends & Social"
         subtitle="Connect with rivals, challenge friends directly to any variant, and track their online status."

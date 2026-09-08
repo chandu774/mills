@@ -103,10 +103,10 @@ export function ProfilePage() {
   const winRate = Math.round((profile.stats.wins / profile.stats.gamesPlayed) * 100);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200">
       {/* Profile Header Banner */}
-      <div className="rounded-3xl border border-background-border bg-white p-6 md:p-8 shadow-soft">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+      <div className="rounded-3xl border border-background-border bg-white p-4 sm:p-6 md:p-8 shadow-soft">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
           <Avatar name={profile.username} size="xl" status="online" className="shadow-md" />
           <div className="flex-1 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -140,38 +140,38 @@ export function ProfilePage() {
 
       {/* Ratings Across All 3 Variants */}
       <section>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">
           Competitive Ratings
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
           <Card className="hover:shadow-soft transition-all">
-            <CardContent className="p-5 flex items-center justify-between">
+            <CardContent className="p-3.5 sm:p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-ink-muted uppercase">3-Piece Mills</p>
-                <p className="text-3xl font-black text-ink font-mono mt-1">{profile.ratings.mills3}</p>
-                <p className="text-[11px] text-primary font-semibold mt-1">Challenger Tier</p>
+                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{profile.ratings.mills3}</p>
+                <p className="text-[11px] text-primary font-semibold mt-0.5 sm:mt-1">Challenger Tier</p>
               </div>
               <RatingBadge rating={profile.ratings.mills3} size="md" />
             </CardContent>
           </Card>
 
           <Card className="hover:shadow-soft transition-all">
-            <CardContent className="p-5 flex items-center justify-between">
+            <CardContent className="p-3.5 sm:p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-ink-muted uppercase">6-Piece Mills</p>
-                <p className="text-3xl font-black text-ink font-mono mt-1">{profile.ratings.mills6}</p>
-                <p className="text-[11px] text-gold font-semibold mt-1">Challenger Tier</p>
+                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{profile.ratings.mills6}</p>
+                <p className="text-[11px] text-gold font-semibold mt-0.5 sm:mt-1">Challenger Tier</p>
               </div>
               <RatingBadge rating={profile.ratings.mills6} size="md" />
             </CardContent>
           </Card>
 
           <Card className="hover:shadow-soft transition-all">
-            <CardContent className="p-5 flex items-center justify-between">
+            <CardContent className="p-3.5 sm:p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-ink-muted uppercase">9-Piece Men's Morris</p>
-                <p className="text-3xl font-black text-ink font-mono mt-1">{profile.ratings.mills9}</p>
-                <p className="text-[11px] text-[#8A6318] font-semibold mt-1">Expert Tier</p>
+                <p className="text-xs font-bold text-ink-muted uppercase">9-Piece Morris</p>
+                <p className="text-2xl sm:text-3xl font-black text-ink font-mono mt-0.5 sm:mt-1">{profile.ratings.mills9}</p>
+                <p className="text-[11px] text-[#8A6318] font-semibold mt-0.5 sm:mt-1">Expert Tier</p>
               </div>
               <RatingBadge rating={profile.ratings.mills9} size="md" />
             </CardContent>
