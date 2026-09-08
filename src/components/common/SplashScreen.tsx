@@ -44,13 +44,13 @@ export function SplashScreen({ onFinish, minDurationMs = 800 }: SplashScreenProp
         }, 200);
       }}
       className={cn(
-        "fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#25150A] text-[#FAF7F2] transition-opacity duration-300 select-none cursor-pointer",
+        "fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#201007] text-[#FAF7F2] transition-opacity duration-300 select-none cursor-pointer",
         isFading ? "opacity-0 pointer-events-none" : "opacity-100"
       )}
     >
-      {/* Embossed Physical Board Logo */}
+      {/* Embossed Physical Teak Board Logo */}
       <div className="relative mb-6">
-        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#4A321E] to-[#1A0E06] p-2.5 shadow-2xl border-2 border-[#5C4028] flex items-center justify-center">
+        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#7A4B29] via-[#61391D] to-[#3B1F0D] p-2.5 shadow-2xl border-2 border-[#8A5732] flex items-center justify-center">
           <svg viewBox="0 0 100 100" className="w-full h-full stroke-[#D4AF37] fill-none stroke-[3]">
             <rect x="15" y="15" width="70" height="70" rx="4" />
             <rect x="32" y="32" width="36" height="36" rx="2" />

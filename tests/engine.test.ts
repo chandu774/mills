@@ -72,6 +72,36 @@ describe('3-Piece Mills Engine', () => {
     expect(legalMoves.length).toBeGreaterThan(0);
     expect(legalMoves.every((m) => m.type === 'MOVE')).toBe(true);
   });
+
+  it('immediately ends game with win when mill is formed in MOVING phase without entering capture', () => {
+    const engine = new GameEngine('MILLS_3');
+    // Place without mills:
+    engine.makeMove({ type: 'PLACE', to: 0 }); // W: 0
+    engine.makeMove({ type: 'PLACE', to: 3 }); // B: 3
+    engine.makeMove({ type: 'PLACE', to: 1 }); // W: 1
+    engine.makeMove({ type: 'PLACE', to: 4 }); // B: 4
+    engine.makeMove({ type: 'PLACE', to: 8 }); // W: 8
+    const lastPlace = engine.makeMove({ type: 'PLACE', to: 7 }); // B: 7
+
+    expect(lastPlace.state.phase).toBe('MOVING');
+    expect(lastPlace.state.currentPlayer).toBe('WHITE');
+
+    // White moves 8 -> 5, Black moves 7 -> 6
+    const w1 = engine.makeMove({ type: 'MOVE', from: 8, to: 5 });
+    expect(w1.success).toBe(true);
+    const b1 = engine.makeMove({ type: 'MOVE', from: 7, to: 6 });
+    expect(b1.success).toBe(true);
+
+    // White moves 5 -> 2, completing mill [0, 1, 2]!
+    const winMove = engine.makeMove({ type: 'MOVE', from: 5, to: 2 });
+    expect(winMove.success).toBe(true);
+    expect(winMove.formedMill).toBe(true);
+    expect(winMove.state.status).toBe('FINISHED');
+    expect(winMove.state.winner).toBe('WHITE');
+    expect(winMove.state.winReason).toContain('mill');
+    expect(winMove.state.status).not.toBe('CAPTURE_PENDING');
+    expect(engine.getLegalMoves().length).toBe(0);
+  });
 });
 
 describe('6-Piece Mills Engine', () => {

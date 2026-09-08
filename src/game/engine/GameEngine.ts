@@ -213,8 +213,19 @@ export class GameEngine {
       if (formedMills.length > 0) {
         formedMill = true;
         this.state.lastMillPoints = Array.from(new Set(formedMills.flat()));
-        this.state.status = 'CAPTURE_PENDING';
-        // Do NOT switch player yet
+
+        if (this.config.instantWinOnMill) {
+          // 3-Piece Mills instant win
+          this.state.status = 'FINISHED';
+          this.state.winner = currentPlayer;
+          this.state.winReason = 'Formed a 3-piece mill (instant win).';
+          this.finalizeTurn(move, moveNotation);
+          return { success: true, state: this.getState(), formedMill: true };
+        } else {
+          // 6 or 9 piece: requires capturing opponent piece
+          this.state.status = 'CAPTURE_PENDING';
+          // Do NOT switch player yet
+        }
       } else {
         this.state.lastMillPoints = null;
         // Switch turn to opponent

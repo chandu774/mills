@@ -62,62 +62,84 @@ export function MillsBoard({
       .map((m) => m.capturedPoint as number);
   }, [state, disabled]);
 
-  // Determine line segments for board rendering
+  // Determine line segments for board rendering based on variant coordinates
   const boardLines = useMemo(() => {
     const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
+    const coords = config.coordinates;
+
+    const getC = (idx: number) => {
+      const pt = coords[idx];
+      return pt ? { x: pt.x, y: pt.y } : { x: 50, y: 50 };
+    };
 
     if (config.variant === 'MILLS_3') {
-      // 3x3 rows & columns
-      lines.push({ x1: 15, y1: 15, x2: 85, y2: 15 });
-      lines.push({ x1: 15, y1: 50, x2: 85, y2: 50 });
-      lines.push({ x1: 15, y1: 85, x2: 85, y2: 85 });
-      lines.push({ x1: 15, y1: 15, x2: 15, y2: 85 });
-      lines.push({ x1: 50, y1: 15, x2: 50, y2: 85 });
-      lines.push({ x1: 85, y1: 15, x2: 85, y2: 85 });
+      const p0 = getC(0), p1 = getC(1), p2 = getC(2);
+      const p3 = getC(3), p5 = getC(5);
+      const p6 = getC(6), p7 = getC(7), p8 = getC(8);
+
+      // Rows
+      lines.push({ x1: p0.x, y1: p0.y, x2: p2.x, y2: p2.y });
+      lines.push({ x1: p3.x, y1: p3.y, x2: p5.x, y2: p5.y });
+      lines.push({ x1: p6.x, y1: p6.y, x2: p8.x, y2: p8.y });
+      // Columns
+      lines.push({ x1: p0.x, y1: p0.y, x2: p6.x, y2: p6.y });
+      lines.push({ x1: p1.x, y1: p1.y, x2: p7.x, y2: p7.y });
+      lines.push({ x1: p2.x, y1: p2.y, x2: p8.x, y2: p8.y });
       // Diagonals
-      lines.push({ x1: 15, y1: 15, x2: 85, y2: 85 });
-      lines.push({ x1: 85, y1: 15, x2: 15, y2: 85 });
+      lines.push({ x1: p0.x, y1: p0.y, x2: p8.x, y2: p8.y });
+      lines.push({ x1: p2.x, y1: p2.y, x2: p6.x, y2: p6.y });
     } else if (config.variant === 'MILLS_6') {
-      // Outer square
-      lines.push({ x1: 15, y1: 15, x2: 85, y2: 15 });
-      lines.push({ x1: 85, y1: 15, x2: 85, y2: 85 });
-      lines.push({ x1: 85, y1: 85, x2: 15, y2: 85 });
-      lines.push({ x1: 15, y1: 85, x2: 15, y2: 15 });
-      // Inner square
-      lines.push({ x1: 32, y1: 32, x2: 68, y2: 32 });
-      lines.push({ x1: 68, y1: 32, x2: 68, y2: 68 });
-      lines.push({ x1: 68, y1: 68, x2: 32, y2: 68 });
-      lines.push({ x1: 32, y1: 68, x2: 32, y2: 32 });
-      // Midpoint cross connectors
-      lines.push({ x1: 50, y1: 15, x2: 50, y2: 32 });
-      lines.push({ x1: 85, y1: 50, x2: 68, y2: 50 });
-      lines.push({ x1: 50, y1: 85, x2: 50, y2: 68 });
-      lines.push({ x1: 15, y1: 50, x2: 32, y2: 50 });
+      const p0 = getC(0), p2 = getC(2), p4 = getC(4), p6 = getC(6);
+      const p8 = getC(8), p10 = getC(10), p12 = getC(12), p14 = getC(14);
+      const p1 = getC(1), p3 = getC(3), p5 = getC(5), p7 = getC(7);
+      const p9 = getC(9), p11 = getC(11), p13 = getC(13), p15 = getC(15);
+
+      // Outer square perimeter
+      lines.push({ x1: p0.x, y1: p0.y, x2: p2.x, y2: p2.y });
+      lines.push({ x1: p2.x, y1: p2.y, x2: p4.x, y2: p4.y });
+      lines.push({ x1: p4.x, y1: p4.y, x2: p6.x, y2: p6.y });
+      lines.push({ x1: p6.x, y1: p6.y, x2: p0.x, y2: p0.y });
+      // Inner square perimeter
+      lines.push({ x1: p8.x, y1: p8.y, x2: p10.x, y2: p10.y });
+      lines.push({ x1: p10.x, y1: p10.y, x2: p12.x, y2: p12.y });
+      lines.push({ x1: p12.x, y1: p12.y, x2: p14.x, y2: p14.y });
+      lines.push({ x1: p14.x, y1: p14.y, x2: p8.x, y2: p8.y });
+      // Midpoint cross bridges
+      lines.push({ x1: p1.x, y1: p1.y, x2: p9.x, y2: p9.y });
+      lines.push({ x1: p3.x, y1: p3.y, x2: p11.x, y2: p11.y });
+      lines.push({ x1: p5.x, y1: p5.y, x2: p13.x, y2: p13.y });
+      lines.push({ x1: p7.x, y1: p7.y, x2: p15.x, y2: p15.y });
     } else if (config.variant === 'MILLS_9') {
-      // Outer square
-      lines.push({ x1: 15, y1: 15, x2: 85, y2: 15 });
-      lines.push({ x1: 85, y1: 15, x2: 85, y2: 85 });
-      lines.push({ x1: 85, y1: 85, x2: 15, y2: 85 });
-      lines.push({ x1: 15, y1: 85, x2: 15, y2: 15 });
-      // Middle square
-      lines.push({ x1: 27, y1: 27, x2: 73, y2: 27 });
-      lines.push({ x1: 73, y1: 27, x2: 73, y2: 73 });
-      lines.push({ x1: 73, y1: 73, x2: 27, y2: 73 });
-      lines.push({ x1: 27, y1: 73, x2: 27, y2: 27 });
-      // Inner square
-      lines.push({ x1: 39, y1: 39, x2: 61, y2: 39 });
-      lines.push({ x1: 61, y1: 39, x2: 61, y2: 61 });
-      lines.push({ x1: 61, y1: 61, x2: 39, y2: 61 });
-      lines.push({ x1: 39, y1: 61, x2: 39, y2: 39 });
-      // Midpoint bridges
-      lines.push({ x1: 50, y1: 15, x2: 50, y2: 39 });
-      lines.push({ x1: 85, y1: 50, x2: 61, y2: 50 });
-      lines.push({ x1: 50, y1: 85, x2: 50, y2: 61 });
-      lines.push({ x1: 15, y1: 50, x2: 39, y2: 50 });
+      const p0 = getC(0), p2 = getC(2), p4 = getC(4), p6 = getC(6);
+      const p8 = getC(8), p10 = getC(10), p12 = getC(12), p14 = getC(14);
+      const p16 = getC(16), p18 = getC(18), p20 = getC(20), p22 = getC(22);
+      const p1 = getC(1), p3 = getC(3), p5 = getC(5), p7 = getC(7);
+      const p17 = getC(17), p19 = getC(19), p21 = getC(21), p23 = getC(23);
+
+      // Outer square perimeter
+      lines.push({ x1: p0.x, y1: p0.y, x2: p2.x, y2: p2.y });
+      lines.push({ x1: p2.x, y1: p2.y, x2: p4.x, y2: p4.y });
+      lines.push({ x1: p4.x, y1: p4.y, x2: p6.x, y2: p6.y });
+      lines.push({ x1: p6.x, y1: p6.y, x2: p0.x, y2: p0.y });
+      // Middle square perimeter
+      lines.push({ x1: p8.x, y1: p8.y, x2: p10.x, y2: p10.y });
+      lines.push({ x1: p10.x, y1: p10.y, x2: p12.x, y2: p12.y });
+      lines.push({ x1: p12.x, y1: p12.y, x2: p14.x, y2: p14.y });
+      lines.push({ x1: p14.x, y1: p14.y, x2: p8.x, y2: p8.y });
+      // Inner square perimeter
+      lines.push({ x1: p16.x, y1: p16.y, x2: p18.x, y2: p18.y });
+      lines.push({ x1: p18.x, y1: p18.y, x2: p20.x, y2: p20.y });
+      lines.push({ x1: p20.x, y1: p20.y, x2: p22.x, y2: p22.y });
+      lines.push({ x1: p22.x, y1: p22.y, x2: p16.x, y2: p16.y });
+      // Midpoint bridges (connecting outer through middle to inner)
+      lines.push({ x1: p1.x, y1: p1.y, x2: p17.x, y2: p17.y });
+      lines.push({ x1: p3.x, y1: p3.y, x2: p19.x, y2: p19.y });
+      lines.push({ x1: p5.x, y1: p5.y, x2: p21.x, y2: p21.y });
+      lines.push({ x1: p7.x, y1: p7.y, x2: p23.x, y2: p23.y });
     }
 
     return lines;
-  }, [config.variant]);
+  }, [config.variant, config.coordinates]);
 
   // Check if a point was part of the last move
   const isLastMovePoint = (pointIndex: number) => {
@@ -131,14 +153,14 @@ export function MillsBoard({
     return Boolean(state.lastMillPoints && state.lastMillPoints.includes(pointIndex));
   };
 
-  // Calibrated piece and touch dimensions per variant to prevent intersection collision
-  const pieceRadius = config.variant === 'MILLS_9' ? 3.9 : config.variant === 'MILLS_6' ? 4.2 : 4.6;
-  const hitRadius = config.variant === 'MILLS_9' ? 5.2 : config.variant === 'MILLS_6' ? 6.2 : 7.2;
+  // Calibrated piece and touch dimensions per variant for balanced spacing
+  const pieceRadius = config.variant === 'MILLS_9' ? 3.9 : config.variant === 'MILLS_6' ? 4.4 : 4.8;
+  const hitRadius = config.variant === 'MILLS_9' ? 5.4 : config.variant === 'MILLS_6' ? 6.2 : 7.0;
 
   return (
     <div className={cn("relative w-full max-w-[min(100vw-16px,440px)] md:max-w-[540px] aspect-square select-none mx-auto", className)}>
       {/* Outer physical wood board container with soft natural shadow */}
-      <div className="w-full h-full p-1.5 sm:p-2.5 rounded-[22px] sm:rounded-[36px] bg-gradient-to-b from-[#4A321E] via-[#382313] to-[#25150A] shadow-board border-[3.5px] sm:border-[6px] border-[#2C190D]">
+      <div className="w-full h-full p-2 sm:p-3 rounded-[24px] sm:rounded-[38px] bg-gradient-to-b from-[#7A4B29] via-[#61391D] to-[#472712] shadow-[0_12px_36px_rgba(25,12,5,0.45),0_3px_10px_rgba(0,0,0,0.3)] border-[4px] sm:border-[7px] border-[#532E16]">
         <svg
           viewBox="0 0 100 100"
           className="w-full h-full rounded-[16px] sm:rounded-[26px] overflow-hidden"
@@ -146,82 +168,126 @@ export function MillsBoard({
           aria-label={`${config.name} Board`}
         >
           <defs>
-            {/* Rich Natural Walnut Wood Surface Gradient */}
-            <radialGradient id="woodBoardGradient" cx="45%" cy="40%" r="75%">
-              <stop offset="0%" stopColor="#432C1B" />
-              <stop offset="60%" stopColor="#352012" />
-              <stop offset="100%" stopColor="#28160B" />
+            {/* Natural Teak Wood Surface Radial Gradient */}
+            <radialGradient id="teakWoodGradient" cx="46%" cy="40%" r="76%">
+              <stop offset="0%" stopColor="#AD7A48" />
+              <stop offset="35%" stopColor="#966536" />
+              <stop offset="70%" stopColor="#805128" />
+              <stop offset="100%" stopColor="#683F1C" />
             </radialGradient>
 
+            {/* Top-to-Bottom Subtle Wood Lighting Gradient */}
+            <linearGradient id="teakPlankLighting" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255, 235, 205, 0.09)" />
+              <stop offset="50%" stopColor="rgba(0, 0, 0, 0)" />
+              <stop offset="100%" stopColor="rgba(35, 15, 5, 0.12)" />
+            </linearGradient>
+
+            {/* Subtle Wood Grain Noise Filter */}
+            <filter id="teakWoodGrain" x="0%" y="0%" width="100%" height="100%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.035 0.75" numOctaves="3" result="noise" />
+              <feColorMatrix
+                type="matrix"
+                values="0 0 0 0 0.45
+                        0 0 0 0 0.28
+                        0 0 0 0 0.14
+                        0 0 0 0 0.08 0"
+                result="coloredNoise"
+              />
+              <feComposite in="SourceGraphic" in2="coloredNoise" operator="over" />
+            </filter>
+
             {/* Radial gradient for Warm Ivory Pieces */}
-            <radialGradient id="ivoryPieceGradient" cx="35%" cy="30%" r="65%">
+            <radialGradient id="ivoryPieceGradient" cx="32%" cy="28%" r="68%">
               <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="45%" stopColor="#F9F4EB" />
-              <stop offset="85%" stopColor="#E5D9C7" />
-              <stop offset="100%" stopColor="#C8BCAB" />
+              <stop offset="35%" stopColor="#F9F5EC" />
+              <stop offset="70%" stopColor="#E6D8C4" />
+              <stop offset="100%" stopColor="#C4B39A" />
             </radialGradient>
 
             {/* Radial gradient for Dark Walnut Pieces */}
-            <radialGradient id="walnutPieceGradient" cx="35%" cy="30%" r="65%">
-              <stop offset="0%" stopColor="#4A3423" />
-              <stop offset="40%" stopColor="#312014" />
-              <stop offset="85%" stopColor="#1C1008" />
-              <stop offset="100%" stopColor="#100804" />
+            <radialGradient id="walnutPieceGradient" cx="32%" cy="28%" r="68%">
+              <stop offset="0%" stopColor="#4D3320" />
+              <stop offset="38%" stopColor="#352013" />
+              <stop offset="75%" stopColor="#221209" />
+              <stop offset="100%" stopColor="#140803" />
             </radialGradient>
 
-            {/* Soft Piece Shadow Blur */}
-            <filter id="pieceShadowBlur" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
+            {/* Soft Piece Contact Shadow Blur */}
+            <filter id="pieceShadowBlur" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.85" />
             </filter>
           </defs>
 
-          {/* Board Wood Surface Background */}
+          {/* Natural Teak Board Wood Surface */}
           <rect
             x="0"
             y="0"
             width="100"
             height="100"
-            fill="url(#woodBoardGradient)"
+            fill="url(#teakWoodGradient)"
+            filter="url(#teakWoodGrain)"
           />
 
-          {/* Subtle Inset Wood Bevel Border */}
+          {/* Ambient Lighting Plank Sheen */}
           <rect
-            x="3.5"
-            y="3.5"
-            width="93"
-            height="93"
-            rx="5"
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            fill="url(#teakPlankLighting)"
+          />
+
+          {/* Beveled Routed Inner Playing Field Border */}
+          <rect
+            x="3.8"
+            y="3.8"
+            width="92.4"
+            height="92.4"
+            rx="4.5"
             fill="none"
-            stroke="#1D1007"
+            stroke="#3C2110"
             strokeWidth="1.2"
           />
           <rect
-            x="4.2"
-            y="4.2"
-            width="91.6"
-            height="91.6"
-            rx="4.5"
+            x="4.4"
+            y="4.4"
+            width="91.2"
+            height="91.2"
+            rx="4.0"
             fill="none"
-            stroke="rgba(110, 72, 41, 0.4)"
+            stroke="rgba(255, 230, 195, 0.2)"
             strokeWidth="0.6"
           />
 
-          {/* Grid Connection Lines (Warm Engraved Inlay Relief) */}
+          {/* Grid Connection Lines (Dark Espresso Engraved Routed Groove) */}
           <g strokeLinecap="round" strokeLinejoin="round">
-            {/* Subtle shadow beneath engraved line */}
-            <g stroke="#170C05" strokeWidth="1.7">
+            {/* Inset shadow at top of engraved groove */}
+            <g stroke="#170A03" strokeWidth="1.8">
               {boardLines.map((line, idx) => (
                 <line
                   key={`line-shadow-${idx}`}
                   x1={line.x1}
-                  y1={line.y1 + 0.3}
+                  y1={line.y1}
                   x2={line.x2}
-                  y2={line.y2 + 0.3}
+                  y2={line.y2}
                 />
               ))}
             </g>
-            {/* Main Walnut Engraved Line */}
-            <g stroke="#6E4829" strokeWidth="1.4">
+            {/* Inset bottom light reflection (gives physical routed depth) */}
+            <g stroke="rgba(255, 230, 195, 0.22)" strokeWidth="0.55">
+              {boardLines.map((line, idx) => (
+                <line
+                  key={`line-highlight-${idx}`}
+                  x1={line.x1}
+                  y1={line.y1 + 0.35}
+                  x2={line.x2}
+                  y2={line.y2 + 0.35}
+                />
+              ))}
+            </g>
+            {/* Main Dark Espresso Line */}
+            <g stroke="#261207" strokeWidth="1.45">
               {boardLines.map((line, idx) => (
                 <line
                   key={`line-main-${idx}`}
@@ -234,7 +300,7 @@ export function MillsBoard({
             </g>
           </g>
 
-          {/* Active Mill Formed Lines (Muted Gold Inlay) */}
+          {/* Active Mill Formed Lines (Warm Gold Inlay) */}
           {state.lastMillPoints && (
             <g stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" className="animate-pulse">
               {config.mills
@@ -267,22 +333,31 @@ export function MillsBoard({
 
             return (
               <g key={`pt-${pointIndex}`}>
-                {/* Empty Intersection Inlay Dot */}
+                {/* Empty Intersection Inlay Socket */}
                 {!piece && (
                   <g>
+                    {/* Dark recessed socket */}
                     <circle
                       cx={coord.x}
-                      cy={coord.y + 0.25}
-                      r={config.variant === 'MILLS_9' ? '1.8' : '2.1'}
-                      fill="#1A0D06"
+                      cy={coord.y + 0.2}
+                      r={config.variant === 'MILLS_9' ? 1.7 : 2.0}
+                      fill="#140802"
                     />
+                    {/* Brass inlay core */}
                     <circle
                       cx={coord.x}
                       cy={coord.y}
-                      r={config.variant === 'MILLS_9' ? '1.6' : '1.8'}
-                      fill="#8C6544"
-                      stroke="#2C190D"
-                      strokeWidth="0.5"
+                      r={config.variant === 'MILLS_9' ? 1.15 : 1.35}
+                      fill="#C49A45"
+                      stroke="#2E160A"
+                      strokeWidth="0.45"
+                    />
+                    {/* Tiny sheen highlight */}
+                    <circle
+                      cx={coord.x - 0.3}
+                      cy={coord.y - 0.3}
+                      r={config.variant === 'MILLS_9' ? 0.35 : 0.45}
+                      fill="rgba(255, 245, 220, 0.55)"
                     />
                   </g>
                 )}
@@ -293,16 +368,16 @@ export function MillsBoard({
                     <circle
                       cx={coord.x}
                       cy={coord.y}
-                      r={pieceRadius * 1.08}
-                      fill="rgba(46, 90, 58, 0.25)"
+                      r={pieceRadius * 1.15}
+                      fill="rgba(46, 90, 58, 0.22)"
                       stroke="#2E5A3A"
-                      strokeWidth="1.1"
+                      strokeWidth="1.2"
                       className="animate-pulse"
                     />
                     <circle
                       cx={coord.x}
                       cy={coord.y}
-                      r={pieceRadius * 0.45}
+                      r={pieceRadius * 0.4}
                       fill="#2E5A3A"
                     />
                   </g>

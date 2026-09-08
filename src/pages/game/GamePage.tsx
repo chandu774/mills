@@ -184,6 +184,19 @@ export function GamePage() {
     const clickedPiece = state.board[pointIndex];
     const isOwnPiece = clickedPiece === state.currentPlayer;
 
+    const applyMoveResult = (result: ReturnType<typeof engine.makeMove>, move: any) => {
+      if (result.success) {
+        setEngineState(result.state);
+        setSelectedPoint(null);
+        if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(result.state.status)) {
+          setShowGameOverModal(true);
+        }
+        if (isMultiplayer) {
+          broadcastMove(move, clocks);
+        }
+      }
+    };
+
     // 1. Capture pending phase
     if (state.status === 'CAPTURE_PENDING') {
       const move = {
@@ -191,14 +204,7 @@ export function GamePage() {
         capturedPoint: pointIndex,
       };
       const result = engine.makeMove(move);
-
-      if (result.success) {
-        setEngineState(result.state);
-        setSelectedPoint(null);
-        if (isMultiplayer) {
-          broadcastMove(move, clocks);
-        }
-      }
+      applyMoveResult(result, move);
       return;
     }
 
@@ -209,14 +215,7 @@ export function GamePage() {
         to: pointIndex,
       };
       const result = engine.makeMove(move);
-
-      if (result.success) {
-        setEngineState(result.state);
-        setSelectedPoint(null);
-        if (isMultiplayer) {
-          broadcastMove(move, clocks);
-        }
-      }
+      applyMoveResult(result, move);
       return;
     }
 
@@ -237,14 +236,7 @@ export function GamePage() {
           to: pointIndex,
         };
         const result = engine.makeMove(move);
-
-        if (result.success) {
-          setEngineState(result.state);
-          setSelectedPoint(null);
-          if (isMultiplayer) {
-            broadcastMove(move, clocks);
-          }
-        }
+        applyMoveResult(result, move);
       }
     }
   };

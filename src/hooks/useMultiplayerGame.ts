@@ -157,6 +157,13 @@ export function useMultiplayerGame({
           const res = currentEng.makeMove(payload.move);
           if (res.success) {
             onEngineStateUpdate(res.state);
+            if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(res.state.status)) {
+              gameService.finishGame({
+                roomId,
+                winner: res.state.winner,
+                reason: res.state.winReason || 'Game finished.',
+              });
+            }
             if (payload.clocks && onClockUpdate) {
               onClockUpdate(payload.clocks);
             }
@@ -329,6 +336,14 @@ export function useMultiplayerGame({
         fen,
         moveNumber: history.length,
       });
+
+      if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(state.status)) {
+        gameService.finishGame({
+          roomId,
+          winner: state.winner,
+          reason: state.winReason || 'Game finished.',
+        });
+      }
     },
     [roomId]
   );
