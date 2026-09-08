@@ -25,9 +25,9 @@ export function Avatar({ src, alt, name, size = 'md', status, className }: Avata
   };
 
   const statusColorMap = {
-    online: 'bg-emerald-500',
-    in_game: 'bg-amber-400',
-    offline: 'bg-slate-500',
+    online: 'bg-primary',
+    in_game: 'bg-gold',
+    offline: 'bg-[#9B8E85]',
   };
 
   const initials = name
@@ -43,7 +43,7 @@ export function Avatar({ src, alt, name, size = 'md', status, className }: Avata
     <div className={cn("relative inline-block shrink-0", className)}>
       <div
         className={cn(
-          "flex items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 border border-background-border font-semibold text-slate-200 overflow-hidden shadow-sm",
+          "flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#4A3423] to-[#25150A] border border-[#5C4028]/30 font-bold text-[#FDFBF7] overflow-hidden shadow-soft",
           sizeMap[size]
         )}
       >
@@ -57,7 +57,7 @@ export function Avatar({ src, alt, name, size = 'md', status, className }: Avata
       {status && (
         <span
           className={cn(
-            "absolute bottom-0 right-0 rounded-full ring-background",
+            "absolute bottom-0 right-0 rounded-full ring-white",
             statusColorMap[status],
             statusSizeMap[size]
           )}

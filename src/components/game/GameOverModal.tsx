@@ -31,20 +31,20 @@ export function GameOverModal({
       <div className="flex flex-col items-center py-4 space-y-4">
         {/* Trophy / Icon Banner */}
         <div
-          className={`w-16 h-16 rounded-3xl flex items-center justify-center shadow-xl ${
+          className={`w-16 h-16 rounded-3xl flex items-center justify-center shadow-soft ${
             isDraw
-              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              ? 'bg-gold/15 text-gold border border-gold/30'
+              : 'bg-primary/15 text-primary border border-primary/30'
           }`}
         >
           {isDraw ? <ShieldAlert className="h-8 w-8" /> : <Trophy className="h-8 w-8 fill-current" />}
         </div>
 
         <div>
-          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-black text-ink tracking-tight">
             {isDraw ? 'Game Drawn' : `${winner} Won!`}
           </h2>
-          <p className="text-xs md:text-sm text-slate-300 mt-1 max-w-xs mx-auto">
+          <p className="text-xs md:text-sm text-ink-muted mt-1 max-w-xs mx-auto">
             {winReason || (isDraw ? 'The match ended in a draw.' : 'Decisive victory.')}
           </p>
         </div>
@@ -52,8 +52,8 @@ export function GameOverModal({
         {/* Rating Adjustment Chip */}
         {!isDraw && (
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-background-elevated border border-background-border font-mono text-sm">
-            <span className="text-slate-400 font-sans text-xs">Rating Change:</span>
-            <span className="text-emerald-400 font-bold">+{ratingChange}</span>
+            <span className="text-ink-muted font-sans text-xs">Rating Change:</span>
+            <span className="text-primary font-bold">+{ratingChange}</span>
           </div>
         )}
 
@@ -63,7 +63,7 @@ export function GameOverModal({
             variant="primary"
             size="lg"
             onClick={onRematch}
-            className="w-full gap-2 text-base font-extrabold shadow-emerald-500/25"
+            className="w-full gap-2 text-base font-extrabold shadow-soft"
           >
             <RotateCcw className="h-4 w-4" />
             REMATCH
@@ -83,7 +83,7 @@ export function GameOverModal({
             variant="ghost"
             size="md"
             onClick={onReturnHome}
-            className="w-full gap-2 text-sm text-slate-400 hover:text-white"
+            className="w-full gap-2 text-sm text-ink-muted hover:text-ink"
           >
             <Home className="h-4 w-4" />
             RETURN HOME

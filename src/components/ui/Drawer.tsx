@@ -33,7 +33,7 @@ export function Drawer({ isOpen, onClose, title, children, className }: DrawerPr
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-ink/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -44,19 +44,19 @@ export function Drawer({ isOpen, onClose, title, children, className }: DrawerPr
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-50 w-full max-w-xl mx-auto rounded-t-3xl border-t border-x border-background-border bg-background-card p-6 pb-safe shadow-2xl transition-transform animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col",
+          "relative z-50 w-full max-w-xl mx-auto rounded-t-3xl border-t border-x border-background-border bg-white p-6 pb-safe shadow-2xl transition-transform animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col text-ink",
           className
         )}
       >
         {/* Grab handle indicator for touch devices */}
-        <div className="w-12 h-1.5 bg-background-border rounded-full mx-auto mb-4 shrink-0" />
+        <div className="w-12 h-1.5 bg-background-darker rounded-full mx-auto mb-4 shrink-0" />
 
         <div className="flex items-center justify-between pb-3 border-b border-background-border shrink-0">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
+          <h2 className="text-lg font-bold text-ink">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close drawer"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-background-elevated hover:text-white"
+            className="rounded-lg p-1.5 text-ink-subtle hover:bg-background-elevated hover:text-ink cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>

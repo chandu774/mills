@@ -69,10 +69,10 @@ export interface RankTier {
 }
 
 export function getRankTier(rating: number): RankTier {
-  if (rating >= 2000) return { name: 'Grandmaster', color: 'text-rose-400', badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/30' };
-  if (rating >= 1800) return { name: 'Master', color: 'text-purple-400', badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
-  if (rating >= 1600) return { name: 'Expert', color: 'text-sky-400', badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/30' };
-  if (rating >= 1400) return { name: 'Adept', color: 'text-emerald-400', badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' };
-  if (rating >= 1200) return { name: 'Challenger', color: 'text-amber-400', badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/30' };
-  return { name: 'Novice', color: 'text-slate-400', badgeBg: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
+  if (rating >= 2000) return { name: 'Grandmaster', color: 'text-gold', badgeBg: 'bg-gold/15 text-gold border-gold/40' };
+  if (rating >= 1800) return { name: 'Master', color: 'text-primary', badgeBg: 'bg-primary/15 text-primary border-primary/40' };
+  if (rating >= 1600) return { name: 'Expert', color: 'text-primary', badgeBg: 'bg-primary/10 text-primary border-primary/30' };
+  if (rating >= 1400) return { name: 'Adept', color: 'text-ink', badgeBg: 'bg-background-elevated text-ink border-background-border' };
+  if (rating >= 1200) return { name: 'Challenger', color: 'text-ink-muted', badgeBg: 'bg-background-elevated text-ink-muted border-background-border' };
+  return { name: 'Novice', color: 'text-ink-subtle', badgeBg: 'bg-background-subtle text-ink-subtle border-background-border' };
 }

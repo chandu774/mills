@@ -11,46 +11,45 @@ export interface TurnStatusBarProps {
 
 export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced }: TurnStatusBarProps) {
   const { currentPlayer, status, phase, piecesPlaced, variant } = state;
-  const isWhite = currentPlayer === 'WHITE';
 
   const getInstruction = () => {
     if (isTurnEnforced && !['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(status)) {
       return {
         icon: Swords,
-        title: "Opponent's turn",
+        title: "Opponent's Turn",
         subtitle: `Waiting for ${currentPlayer.toLowerCase()} to play...`,
-        theme: 'bg-background-elevated border-background-border text-slate-300',
-        iconColor: 'text-slate-400',
+        theme: 'bg-white border-background-border text-ink-muted',
+        iconColor: 'text-ink-subtle bg-background-elevated',
       };
     }
 
     if (status === 'CAPTURE_PENDING') {
       return {
         icon: Target,
-        title: 'Mill Formed!',
-        subtitle: 'Select an opponent piece to capture and remove from the board.',
-        theme: 'bg-rose-500/15 border-rose-500/30 text-rose-300',
-        iconColor: 'text-rose-400',
+        title: 'Mill Formed! Capture a Piece',
+        subtitle: 'Click any opponent piece to remove it from the board.',
+        theme: 'bg-red-50/80 border-alert-danger/30 text-alert-danger',
+        iconColor: 'text-alert-danger bg-red-100',
       };
     }
 
     if (status === 'FINISHED') {
       return {
         icon: Sparkles,
-        title: 'Game Over',
-        subtitle: state.winReason || 'Match has concluded.',
-        theme: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
-        iconColor: 'text-emerald-400',
+        title: 'Game Concluded',
+        subtitle: state.winReason || 'Match has finished.',
+        theme: 'bg-[#F2F7F4] border-primary/30 text-primary',
+        iconColor: 'text-primary bg-primary/15',
       };
     }
 
     if (status === 'DRAW') {
       return {
         icon: Shield,
-        title: 'Game Drawn',
+        title: 'Match Drawn',
         subtitle: state.winReason || 'Draw agreed.',
-        theme: 'bg-amber-500/15 border-amber-500/30 text-amber-300',
-        iconColor: 'text-amber-400',
+        theme: 'bg-gold-light border-gold/30 text-gold',
+        iconColor: 'text-gold bg-gold/15',
       };
     }
 
@@ -61,9 +60,9 @@ export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced 
       return {
         icon: Zap,
         title: `${currentPlayer}'s turn — Place a piece`,
-        subtitle: `Click any empty intersection point (${remaining} piece${remaining !== 1 ? 's' : ''} left).`,
-        theme: 'bg-background-elevated border-background-border text-slate-200',
-        iconColor: isWhite ? 'text-slate-100' : 'text-slate-400',
+        subtitle: `Tap any open intersection point (${remaining} piece${remaining !== 1 ? 's' : ''} left).`,
+        theme: 'bg-[#F3F8F4] border-primary/30 text-ink',
+        iconColor: 'text-primary bg-primary/15',
       };
     }
 
@@ -72,17 +71,17 @@ export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced 
         return {
           icon: Swords,
           title: `${currentPlayer} Flying — Choose landing point`,
-          subtitle: 'Click any unoccupied point on the board to jump.',
-          theme: 'bg-primary-subtle border-primary/30 text-primary',
-          iconColor: 'text-primary',
+          subtitle: 'Tap any unoccupied point on the board to fly.',
+          theme: 'bg-gold-light border-gold/30 text-ink',
+          iconColor: 'text-gold bg-gold/15',
         };
       }
       return {
         icon: Swords,
         title: `${currentPlayer}'s turn — Flying Phase Active`,
-        subtitle: 'Select one of your 3 pieces to jump to any open point.',
-        theme: 'bg-primary-subtle border-primary/30 text-primary',
-        iconColor: 'text-primary',
+        subtitle: 'Select one of your 3 pieces to jump anywhere.',
+        theme: 'bg-gold-light border-gold/30 text-ink',
+        iconColor: 'text-gold bg-gold/15',
       };
     }
 
@@ -91,18 +90,18 @@ export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced 
       return {
         icon: Swords,
         title: `${currentPlayer} — Choose destination`,
-        subtitle: 'Click an adjacent open point along a connected line.',
-        theme: 'bg-primary-subtle border-primary/30 text-primary',
-        iconColor: 'text-primary',
+        subtitle: 'Tap an adjacent open point along a connected line.',
+        theme: 'bg-[#F3F8F4] border-primary/30 text-ink',
+        iconColor: 'text-primary bg-primary/15',
       };
     }
 
     return {
       icon: Swords,
-      title: `${currentPlayer}'s turn — Move`,
+      title: `${currentPlayer}'s turn — Move a piece`,
       subtitle: 'Select one of your pieces to slide to an adjacent point.',
-      theme: 'bg-background-elevated border-background-border text-slate-200',
-      iconColor: isWhite ? 'text-slate-100' : 'text-slate-400',
+      theme: 'bg-white border-background-border text-ink',
+      iconColor: 'text-primary bg-primary/10',
     };
   };
 
@@ -112,17 +111,17 @@ export function TurnStatusBar({ state, selectedPoint, className, isTurnEnforced 
   return (
     <div
       className={cn(
-        "flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all text-left shadow-sm select-none",
+        "flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border transition-all text-left shadow-soft select-none",
         instruction.theme,
         className
       )}
     >
-      <div className={cn("p-2 rounded-xl bg-background-card border border-background-border shrink-0", instruction.iconColor)}>
-        <Icon className="h-5 w-5" />
+      <div className={cn("p-1.5 sm:p-2 rounded-xl shrink-0", instruction.iconColor)}>
+        <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
       </div>
       <div className="min-w-0 flex-1">
-        <h4 className="text-sm font-bold truncate text-white">{instruction.title}</h4>
-        <p className="text-xs text-slate-400 truncate mt-0.5">{instruction.subtitle}</p>
+        <h4 className="text-xs sm:text-sm font-bold truncate text-ink">{instruction.title}</h4>
+        <p className="text-[11px] sm:text-xs text-ink-muted truncate mt-0.5">{instruction.subtitle}</p>
       </div>
     </div>
   );

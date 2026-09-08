@@ -32,14 +32,14 @@ export function GameControls({
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between gap-2 p-2 rounded-2xl bg-background-card border border-background-border">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-2 p-1.5 sm:p-2 rounded-2xl bg-white/90 border border-background-border/80 shadow-soft">
+        <div className="flex items-center gap-1">
           {/* Flip Perspective */}
           <button
             onClick={onFlipBoard}
             aria-label="Flip board perspective"
             title="Flip Board"
-            className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-background-elevated transition-colors"
+            className="p-2 sm:p-2.5 rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated transition-colors cursor-pointer"
           >
             <ArrowUpDown className="h-4 w-4" />
           </button>
@@ -49,7 +49,7 @@ export function GameControls({
             onClick={() => setIsMuted(!isMuted)}
             aria-label={isMuted ? "Unmute sound" : "Mute sound"}
             title={isMuted ? "Unmute" : "Mute"}
-            className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-background-elevated transition-colors"
+            className="p-2 sm:p-2.5 rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated transition-colors cursor-pointer"
           >
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
@@ -61,7 +61,7 @@ export function GameControls({
               size="sm"
               variant="primary"
               onClick={onRestartGame}
-              className="text-xs gap-1.5 h-9 font-bold"
+              className="text-xs gap-1.5 h-8.5 sm:h-9 font-bold"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Rematch
             </Button>
@@ -73,10 +73,10 @@ export function GameControls({
                 variant="outline"
                 onClick={onOfferDraw}
                 disabled={isGameOver}
-                className="text-xs gap-1.5 h-9"
+                className="text-xs gap-1.5 h-8.5 sm:h-9 font-medium border-background-border text-ink hover:bg-background-subtle"
               >
-                <Handshake className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Draw</span>
+                <Handshake className="h-3.5 w-3.5 text-ink-muted" />
+                <span>Draw</span>
               </Button>
 
               {/* Resign Button */}
@@ -85,7 +85,7 @@ export function GameControls({
                 variant="danger"
                 onClick={() => setShowResignModal(true)}
                 disabled={isGameOver}
-                className="text-xs gap-1.5 h-9 font-bold"
+                className="text-xs gap-1.5 h-8.5 sm:h-9 font-semibold"
               >
                 <Flag className="h-3.5 w-3.5" />
                 <span>Resign</span>
@@ -100,7 +100,7 @@ export function GameControls({
         isOpen={showResignModal}
         onClose={() => setShowResignModal(false)}
         title="Confirm Resignation"
-        description={`Are you sure you want to resign this match? The opponent will be awarded victory.`}
+        description="Are you sure you want to resign this match? The opponent will be awarded victory."
       >
         <div className="flex items-center justify-end gap-3 pt-4">
           <Button variant="secondary" size="md" onClick={() => setShowResignModal(false)}>

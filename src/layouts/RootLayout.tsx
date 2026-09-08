@@ -50,10 +50,10 @@ export function RootLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-slate-100 flex flex-col md:flex-row antialiased">
+    <div className="min-h-screen bg-background text-ink flex flex-col md:flex-row antialiased">
       {/* Offline banner */}
       {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-rose-600 text-white text-xs font-semibold py-1 px-4 text-center flex items-center justify-center gap-2 shadow-lg">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-alert-danger text-white text-xs font-semibold py-1 px-4 text-center flex items-center justify-center gap-2 shadow-md">
           <WifiOff className="h-4 w-4" />
           <span>Connection lost. Reconnecting...</span>
         </div>

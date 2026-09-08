@@ -34,7 +34,7 @@ export function Modal({ isOpen, onClose, title, description, children, className
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-ink/40 backdrop-blur-sm transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -45,19 +45,19 @@ export function Modal({ isOpen, onClose, title, description, children, className
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-50 w-full max-w-lg overflow-hidden rounded-2xl border border-background-border bg-background-card p-6 shadow-2xl transition-all duration-200 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col",
+          "relative z-50 w-full max-w-lg overflow-hidden rounded-2xl border border-background-border bg-white p-6 shadow-2xl transition-all duration-200 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col text-ink",
           className
         )}
       >
         <div className="flex items-start justify-between pb-4">
           <div>
-            {title && <h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>}
-            {description && <p className="mt-1 text-sm text-slate-400">{description}</p>}
+            {title && <h2 className="text-xl font-bold text-ink tracking-tight">{title}</h2>}
+            {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
           </div>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-background-elevated hover:text-white transition-colors"
+            className="rounded-lg p-1.5 text-ink-subtle hover:bg-background-elevated hover:text-ink transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>

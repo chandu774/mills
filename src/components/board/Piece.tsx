@@ -16,7 +16,7 @@ export function Piece({
   color,
   cx,
   cy,
-  radius = 4.8,
+  radius = 4.6,
   isSelected = false,
   isEligibleCapture = false,
   isMillPiece = false,
@@ -37,107 +37,108 @@ export function Piece({
           onClick?.();
         }
       }}
-      aria-label={`${color} piece at position`}
+      aria-label={`${color} piece`}
     >
-      {/* Selection Halo */}
+      {/* Selection Ring: Muted Forest Green */}
       {isSelected && (
         <circle
           cx={cx}
           cy={cy}
-          r={radius * 1.55}
+          r={radius * 1.5}
           fill="none"
-          stroke="#22c55e"
-          strokeWidth="1.8"
+          stroke="#2E5A3A"
+          strokeWidth="1.6"
           strokeDasharray="2 1.5"
-          className="animate-spin-slow"
+          className="animate-spin-slow opacity-90"
         />
       )}
 
-      {/* Capture Reticle / Pulsing Ring */}
+      {/* Capture Reticle / Muted Red Pulse */}
       {isEligibleCapture && (
         <g>
           <circle
             cx={cx}
             cy={cy}
-            r={radius * 1.6}
+            r={radius * 1.55}
             fill="none"
-            stroke="#ef4444"
-            strokeWidth="1.6"
-            className="animate-ping opacity-75"
+            stroke="#B93838"
+            strokeWidth="1.5"
+            className="animate-ping opacity-60"
           />
           <circle
             cx={cx}
             cy={cy}
-            r={radius * 1.5}
-            fill="rgba(239, 68, 68, 0.25)"
-            stroke="#ef4444"
+            r={radius * 1.45}
+            fill="rgba(185, 56, 56, 0.18)"
+            stroke="#B93838"
             strokeWidth="1.2"
           />
         </g>
       )}
 
-      {/* Mill Highlight Ring */}
+      {/* Mill Highlight Ring: Muted Warm Gold */}
       {isMillPiece && !isSelected && !isEligibleCapture && (
         <circle
           cx={cx}
           cy={cy}
           r={radius * 1.35}
           fill="none"
-          stroke="#f59e0b"
-          strokeWidth="1.2"
+          stroke="#C4973B"
+          strokeWidth="1.4"
           className="animate-pulse"
         />
       )}
 
-      {/* Last Move Indicator Ring */}
+      {/* Last Move Indicator Ring: Subtle Stone Dot/Ring */}
       {isLastMove && !isSelected && (
         <circle
           cx={cx}
           cy={cy}
           r={radius * 1.3}
           fill="none"
-          stroke="#38bdf8"
-          strokeWidth="0.8"
+          stroke="#D4AF37"
+          strokeWidth="0.9"
           strokeDasharray="1.5 1.5"
         />
       )}
 
-      {/* Piece Drop Shadow */}
-      <circle
+      {/* Natural Physical Piece Shadow */}
+      <ellipse
         cx={cx}
-        cy={cy + 0.8}
-        r={radius}
-        fill="rgba(0, 0, 0, 0.45)"
-        filter="blur(0.8px)"
+        cy={cy + 0.9}
+        rx={radius * 1.02}
+        ry={radius * 0.96}
+        fill={isWhite ? 'rgba(30, 18, 10, 0.35)' : 'rgba(0, 0, 0, 0.55)'}
+        filter="url(#pieceShadowBlur)"
       />
 
-      {/* Main Piece Body with Radial Gradient */}
+      {/* Main Physical Tactile Piece Body */}
       <circle
         cx={cx}
         cy={cy}
         r={radius}
-        fill={isWhite ? 'url(#whitePieceGradient)' : 'url(#blackPieceGradient)'}
-        stroke={isWhite ? '#94a3b8' : '#0f172a'}
-        strokeWidth="0.8"
+        fill={isWhite ? 'url(#ivoryPieceGradient)' : 'url(#walnutPieceGradient)'}
+        stroke={isWhite ? '#C8BCAB' : '#1A0E06'}
+        strokeWidth="0.75"
         className="transition-transform group-hover:scale-105"
       />
 
-      {/* Inner Gloss / Bevel Highlight */}
-      <circle
-        cx={cx - radius * 0.25}
-        cy={cy - radius * 0.25}
-        r={radius * 0.45}
-        fill={isWhite ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.18)'}
-        filter="blur(0.5px)"
+      {/* Inner Gloss / Bevel Top-Left Sheen */}
+      <path
+        d={`M ${cx - radius * 0.75} ${cy} A ${radius * 0.75} ${radius * 0.75} 0 0 1 ${cx + radius * 0.75} ${cy}`}
+        fill="none"
+        stroke={isWhite ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.18)'}
+        strokeWidth="0.8"
+        strokeLinecap="round"
       />
 
-      {/* Center Tactile Indent Ring */}
+      {/* Center Tactile Carved Indent */}
       <circle
         cx={cx}
         cy={cy}
-        r={radius * 0.48}
+        r={radius * 0.45}
         fill="none"
-        stroke={isWhite ? 'rgba(148, 163, 184, 0.4)' : 'rgba(15, 23, 42, 0.6)'}
+        stroke={isWhite ? 'rgba(180, 165, 145, 0.5)' : 'rgba(15, 8, 4, 0.7)'}
         strokeWidth="0.6"
       />
     </g>

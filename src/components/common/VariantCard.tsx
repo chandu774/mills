@@ -17,25 +17,22 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
       pieces: 3,
       points: 9,
       icon: Zap,
-      accentColor: 'text-emerald-400',
+      accentColor: 'text-primary bg-primary/10 border-primary/20',
       description: 'Quick placement on a 3x3 grid. First to form a 3-in-a-row mill wins immediately.',
       boardSvg: (
-        <svg viewBox="0 0 100 100" className="w-16 h-16 stroke-slate-500 fill-none stroke-[3]">
-          <rect x="15" y="15" width="70" height="70" />
-          <line x1="50" y1="15" x2="50" y2="85" />
-          <line x1="15" y1="50" x2="85" y2="50" />
-          <line x1="15" y1="15" x2="85" y2="85" strokeDasharray="3 3" />
-          <line x1="85" y1="15" x2="15" y2="85" strokeDasharray="3 3" />
-          {/* Points */}
-          <circle cx="15" cy="15" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="50" cy="15" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="85" cy="15" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="15" cy="50" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="50" cy="50" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="85" cy="50" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="15" cy="85" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="50" cy="85" r="4" className="fill-slate-300 stroke-none" />
-          <circle cx="85" cy="85" r="4" className="fill-slate-300 stroke-none" />
+        <svg viewBox="0 0 100 100" className="w-16 h-16 rounded-lg shadow-sm overflow-hidden">
+          <rect width="100" height="100" rx="8" fill="#3D2817" />
+          <rect x="18" y="18" width="64" height="64" fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="50" y1="18" x2="50" y2="82" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="18" y1="50" x2="82" y2="50" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="18" y1="18" x2="82" y2="82" stroke="#D4AF37" strokeWidth="1.5" strokeDasharray="3 3" strokeOpacity="0.6" />
+          <line x1="82" y1="18" x2="18" y2="82" stroke="#D4AF37" strokeWidth="1.5" strokeDasharray="3 3" strokeOpacity="0.6" />
+          {/* Intersection Points */}
+          {[18, 50, 82].map(x =>
+            [18, 50, 82].map(y => (
+              <circle key={`${x}-${y}`} cx={x} cy={y} r="3.5" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+            ))
+          )}
         </svg>
       )
     },
@@ -45,25 +42,36 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
       pieces: 6,
       points: 16,
       icon: Shield,
-      accentColor: 'text-sky-400',
+      accentColor: 'text-amber-800 bg-amber-500/10 border-amber-500/20',
       description: 'Two concentric squares with 16 points. Rich tactical maneuvering and positioning.',
       boardSvg: (
-        <svg viewBox="0 0 100 100" className="w-16 h-16 stroke-slate-500 fill-none stroke-[3]">
-          <rect x="15" y="15" width="70" height="70" />
-          <rect x="32" y="32" width="36" height="36" />
-          <line x1="50" y1="15" x2="50" y2="32" />
-          <line x1="50" y1="68" x2="50" y2="85" />
-          <line x1="15" y1="50" x2="32" y2="50" />
-          <line x1="68" y1="50" x2="85" y2="50" />
-          {/* Outer points */}
-          <circle cx="15" cy="15" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="50" cy="15" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="85" cy="15" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="15" cy="50" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="85" cy="50" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="15" cy="85" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="50" cy="85" r="3.5" className="fill-slate-300 stroke-none" />
-          <circle cx="85" cy="85" r="3.5" className="fill-slate-300 stroke-none" />
+        <svg viewBox="0 0 100 100" className="w-16 h-16 rounded-lg shadow-sm overflow-hidden">
+          <rect width="100" height="100" rx="8" fill="#3D2817" />
+          <rect x="18" y="18" width="64" height="64" fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <rect x="34" y="34" width="32" height="32" fill="none" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="50" y1="18" x2="50" y2="34" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="50" y1="66" x2="50" y2="82" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="18" y1="50" x2="34" y2="50" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          <line x1="66" y1="50" x2="82" y2="50" stroke="#D4AF37" strokeWidth="2.5" strokeOpacity="0.75" />
+          {/* Key points */}
+          {[18, 50, 82].map(x => (
+            <circle key={`top-${x}`} cx={x} cy={18} r="3" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+          ))}
+          {[18, 82].map(x => (
+            <circle key={`mid-${x}`} cx={x} cy={50} r="3" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+          ))}
+          {[18, 50, 82].map(x => (
+            <circle key={`bot-${x}`} cx={x} cy={82} r="3" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+          ))}
+          {[34, 50, 66].map(x => (
+            <circle key={`inner-top-${x}`} cx={x} cy={34} r="3" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+          ))}
+          {[34, 66].map(x => (
+            <circle key={`inner-mid-${x}`} cx={x} cy={50} r="3" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+          ))}
+          {[34, 50, 66].map(x => (
+            <circle key={`inner-bot-${x}`} cx={x} cy={66} r="3" fill="#FAF7F2" stroke="#25150A" strokeWidth="1" />
+          ))}
         </svg>
       )
     },
@@ -73,21 +81,25 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
       pieces: 9,
       points: 24,
       icon: Crown,
-      accentColor: 'text-amber-400',
+      accentColor: 'text-amber-700 bg-amber-600/10 border-amber-600/20',
       description: 'The ancient 3-square 24-point classic. Full placement, moving, captures, and flying endgame.',
       boardSvg: (
-        <svg viewBox="0 0 100 100" className="w-16 h-16 stroke-slate-500 fill-none stroke-[3]">
-          <rect x="12" y="12" width="76" height="76" />
-          <rect x="26" y="26" width="48" height="48" />
-          <rect x="38" y="38" width="24" height="24" />
-          <line x1="50" y1="12" x2="50" y2="38" />
-          <line x1="50" y1="62" x2="50" y2="88" />
-          <line x1="12" y1="50" x2="38" y2="50" />
-          <line x1="62" y1="50" x2="88" y2="50" />
-          {/* Highlights */}
-          <circle cx="50" cy="12" r="3" className="fill-amber-400 stroke-none" />
-          <circle cx="50" cy="26" r="3" className="fill-amber-400 stroke-none" />
-          <circle cx="50" cy="38" r="3" className="fill-amber-400 stroke-none" />
+        <svg viewBox="0 0 100 100" className="w-16 h-16 rounded-lg shadow-sm overflow-hidden">
+          <rect width="100" height="100" rx="8" fill="#3D2817" />
+          <rect x="14" y="14" width="72" height="72" fill="none" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          <rect x="27" y="27" width="46" height="46" fill="none" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          <rect x="39" y="39" width="22" height="22" fill="none" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          <line x1="50" y1="14" x2="50" y2="39" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          <line x1="50" y1="61" x2="50" y2="86" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          <line x1="14" y1="50" x2="39" y2="50" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          <line x1="61" y1="50" x2="86" y2="50" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.75" />
+          {/* Inlay Points */}
+          <circle cx="50" cy="14" r="3" fill="#D4AF37" />
+          <circle cx="50" cy="27" r="3" fill="#D4AF37" />
+          <circle cx="50" cy="39" r="3" fill="#D4AF37" />
+          <circle cx="50" cy="61" r="3" fill="#D4AF37" />
+          <circle cx="50" cy="73" r="3" fill="#D4AF37" />
+          <circle cx="50" cy="86" r="3" fill="#D4AF37" />
         </svg>
       )
     }
@@ -99,40 +111,40 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
     <div
       onClick={() => onSelect?.(variant)}
       className={cn(
-        "group relative flex flex-col justify-between rounded-2xl border p-5 transition-all duration-200 cursor-pointer select-none",
+        "group relative flex flex-col justify-between rounded-2xl border p-5 transition-all duration-200 cursor-pointer select-none bg-white",
         isSelected
-          ? "border-primary bg-background-elevated shadow-lg shadow-primary/10 ring-2 ring-primary"
-          : "border-background-border bg-background-card hover:border-slate-600 hover:bg-background-elevated",
+          ? "border-primary bg-primary/[0.03] shadow-md ring-2 ring-primary/70"
+          : "border-background-border hover:border-ink/20 hover:shadow-soft",
         className
       )}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={cn("rounded-xl p-2.5 bg-background-card border border-background-border", config.accentColor)}>
+          <div className={cn("rounded-xl p-2.5 border", config.accentColor)}>
             <Icon className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white group-hover:text-primary transition-colors">
+            <h3 className="text-base font-bold text-ink group-hover:text-primary transition-colors">
               {config.title}
             </h3>
-            <p className="text-xs font-medium text-slate-400">{config.subtitle}</p>
+            <p className="text-xs font-medium text-ink-muted">{config.subtitle}</p>
           </div>
         </div>
-        <div className="shrink-0 p-1 rounded-lg bg-background/50">
+        <div className="shrink-0">
           {config.boardSvg}
         </div>
       </div>
 
-      <p className="my-4 text-xs text-slate-400 leading-relaxed">
+      <p className="my-4 text-xs text-ink-muted leading-relaxed">
         {config.description}
       </p>
 
-      <div className="flex items-center justify-between pt-3 border-t border-background-border/60 text-xs">
-        <span className="text-slate-400">
-          <strong className="text-slate-200">{config.pieces}</strong> pieces / player
+      <div className="flex items-center justify-between pt-3 border-t border-background-border text-xs">
+        <span className="text-ink-muted">
+          <strong className="text-ink font-semibold">{config.pieces}</strong> pieces / player
         </span>
-        <span className="text-slate-400">
-          <strong className="text-slate-200">{config.points}</strong> intersections
+        <span className="text-ink-muted">
+          <strong className="text-ink font-semibold">{config.points}</strong> intersections
         </span>
       </div>
     </div>

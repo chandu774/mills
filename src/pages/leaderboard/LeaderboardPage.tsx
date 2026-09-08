@@ -46,26 +46,26 @@ export function LeaderboardPage() {
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-400/30">
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gold text-[#1E140C] font-black shadow-soft">
           <Crown className="h-4 w-4 fill-current" />
         </div>
       );
     }
     if (rank === 2) {
       return (
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-950 font-black shadow-md">
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#D5C9BD] text-[#1E140C] font-black shadow-soft">
           <Medal className="h-4 w-4" />
         </div>
       );
     }
     if (rank === 3) {
       return (
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-700 text-amber-100 font-black">
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#B88225]/40 text-[#4A3423] font-black shadow-soft">
           <Medal className="h-4 w-4" />
         </div>
       );
     }
-    return <span className="font-mono font-bold text-sm text-slate-400">#{rank}</span>;
+    return <span className="font-mono font-bold text-sm text-ink-muted">#{rank}</span>;
   };
 
   return (
@@ -85,7 +85,7 @@ export function LeaderboardPage() {
         onChange={(id) => setActiveVariant(id as GameVariant)}
       />
 
-      {/* Top 3 Podium Highlights for Desktop */}
+      {/* Top 3 Podium Highlights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         {currentList.slice(0, 3).map((player) => (
           <Card
@@ -93,8 +93,8 @@ export function LeaderboardPage() {
             className={cn(
               "relative overflow-hidden border transition-all text-center",
               player.rank === 1
-                ? "border-amber-400/50 bg-gradient-to-b from-amber-400/10 to-background-card shadow-lg shadow-amber-400/10 md:-translate-y-2"
-                : "border-background-border bg-background-card"
+                ? "border-gold/50 bg-gradient-to-b from-[#FAF4E8] to-white shadow-soft md:-translate-y-2"
+                : "border-background-border bg-white shadow-soft"
             )}
           >
             <div className="p-6 flex flex-col items-center">
@@ -104,15 +104,15 @@ export function LeaderboardPage() {
                   {getRankBadge(player.rank)}
                 </div>
               </div>
-              <h3 className="font-bold text-base text-white">{player.username}</h3>
-              <p className="text-xs text-slate-400">{player.displayName}</p>
+              <h3 className="font-bold text-base text-ink">{player.username}</h3>
+              <p className="text-xs text-ink-muted">{player.displayName}</p>
               <div className="mt-3">
                 <RatingBadge rating={player.rating} showTier size="md" />
               </div>
-              <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400 border-t border-background-border/60 pt-3 w-full">
+              <div className="mt-4 flex items-center justify-center gap-4 text-xs text-ink-muted border-t border-background-border pt-3 w-full">
                 <span>{player.gamesCount} games</span>
                 <span>•</span>
-                <span className="text-emerald-400 font-semibold">{player.winRate}% win rate</span>
+                <span className="text-primary font-bold">{player.winRate}% win rate</span>
               </div>
             </div>
           </Card>
@@ -124,7 +124,7 @@ export function LeaderboardPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-background-elevated/80 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-background-border">
+              <thead className="bg-background-elevated text-ink-muted text-xs font-semibold uppercase tracking-wider border-b border-background-border">
                 <tr>
                   <th className="py-3.5 px-4 text-center w-16">Rank</th>
                   <th className="py-3.5 px-4">Player</th>
@@ -140,7 +140,7 @@ export function LeaderboardPage() {
                     className={cn(
                       "transition-colors",
                       entry.isCurrentUser
-                        ? "bg-primary/10 hover:bg-primary/15 font-bold border-l-4 border-l-primary"
+                        ? "bg-primary/[0.04] hover:bg-primary/[0.08] font-bold border-l-4 border-l-primary"
                         : "hover:bg-background-elevated/40"
                     )}
                   >
@@ -151,21 +151,21 @@ export function LeaderboardPage() {
                       <div className="flex items-center gap-3">
                         <Avatar name={entry.username} size="sm" />
                         <div>
-                          <span className={cn("font-bold", entry.isCurrentUser ? "text-primary" : "text-white")}>
+                          <span className={cn("font-bold", entry.isCurrentUser ? "text-primary" : "text-ink")}>
                             {entry.username} {entry.isCurrentUser && '(You)'}
                           </span>
-                          <p className="text-xs text-slate-400 font-normal">{entry.displayName}</p>
+                          <p className="text-xs text-ink-muted font-normal">{entry.displayName}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <span className="font-mono font-bold text-white text-base">{entry.rating}</span>
+                      <span className="font-mono font-bold text-ink text-base">{entry.rating}</span>
                     </td>
-                    <td className="py-3.5 px-4 text-center font-mono text-slate-300">
+                    <td className="py-3.5 px-4 text-center font-mono text-ink-muted">
                       {entry.gamesCount}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <span className="font-mono font-bold text-emerald-400">{entry.winRate}%</span>
+                      <span className="font-mono font-bold text-primary">{entry.winRate}%</span>
                     </td>
                   </tr>
                 ))}
@@ -175,16 +175,16 @@ export function LeaderboardPage() {
         </CardContent>
       </Card>
 
-      {/* Sticky User Standing Spotlight (if ranked outside top 5) */}
+      {/* User Standing Spotlight */}
       {currentUserEntry && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-background-card via-background-elevated to-background-card border border-primary/40 flex items-center justify-between shadow-xl">
+        <div className="p-4 rounded-2xl bg-white border border-primary/30 flex items-center justify-between shadow-soft">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 text-primary font-mono font-black text-sm">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary font-mono font-black text-sm">
               #{currentUserEntry.rank}
             </div>
             <div>
-              <p className="text-xs text-slate-400">Your Current Standing in {activeVariant.replace('_', ' ')}</p>
-              <h4 className="text-sm font-bold text-white">Keep playing ranked games to enter the Top 20!</h4>
+              <p className="text-xs text-ink-muted">Your Current Standing in {activeVariant.replace('_', ' ')}</p>
+              <h4 className="text-sm font-bold text-ink">Keep playing ranked games to enter the Top 20!</h4>
             </div>
           </div>
           <RatingBadge rating={currentUserEntry.rating} size="lg" />

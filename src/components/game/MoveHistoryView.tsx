@@ -28,29 +28,29 @@ export function MoveHistoryView({
   const activeIndex = currentReplayIndex !== null ? currentReplayIndex : history.length - 1;
 
   return (
-    <div className={cn("flex flex-col h-full rounded-2xl bg-background-card border border-background-border overflow-hidden", className)}>
-      <div className="p-3 border-b border-background-border flex items-center justify-between">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Move Log</h4>
-        <span className="text-[11px] font-mono text-slate-500">{history.length} moves</span>
+    <div className={cn("flex flex-col h-full rounded-2xl bg-white border border-background-border shadow-soft overflow-hidden text-ink", className)}>
+      <div className="px-3.5 py-2.5 border-b border-background-border flex items-center justify-between bg-background-subtle/50">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-ink-muted">Move Log</h4>
+        <span className="text-[11px] font-mono text-ink-subtle">{history.length} moves</span>
       </div>
 
       {/* Move list table */}
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5 text-xs font-mono">
         {turns.length === 0 ? (
-          <p className="text-slate-500 text-center py-6 text-[11px] font-sans">No moves played yet.</p>
+          <p className="text-ink-subtle text-center py-6 text-[11px] font-sans">No moves played yet.</p>
         ) : (
           turns.map((turn) => (
-            <div key={turn.turnNumber} className="flex items-center rounded-lg hover:bg-background-elevated/40 px-2 py-1">
-              <span className="w-8 text-slate-500 text-[11px] shrink-0">{turn.turnNumber}.</span>
+            <div key={turn.turnNumber} className="flex items-center rounded-lg hover:bg-background-elevated/60 px-2 py-1">
+              <span className="w-8 text-ink-subtle text-[11px] shrink-0 font-sans">{turn.turnNumber}.</span>
               
               {/* White move */}
               <button
                 onClick={() => onSelectMove(turn.white.globalIndex)}
                 className={cn(
-                  "flex-1 text-left px-2 py-0.5 rounded transition-colors",
+                  "flex-1 text-left px-2 py-0.5 rounded transition-colors cursor-pointer",
                   activeIndex === turn.white.globalIndex
-                    ? "bg-primary/20 text-primary font-bold"
-                    : "text-slate-200 hover:text-white"
+                    ? "bg-primary/15 text-primary font-bold"
+                    : "text-ink hover:text-primary"
                 )}
               >
                 {turn.white.notation}
@@ -61,10 +61,10 @@ export function MoveHistoryView({
                 <button
                   onClick={() => onSelectMove(turn.black!.globalIndex)}
                   className={cn(
-                    "flex-1 text-left px-2 py-0.5 rounded transition-colors",
+                    "flex-1 text-left px-2 py-0.5 rounded transition-colors cursor-pointer",
                     activeIndex === turn.black.globalIndex
-                      ? "bg-primary/20 text-primary font-bold"
-                      : "text-slate-300 hover:text-white"
+                      ? "bg-primary/15 text-primary font-bold"
+                      : "text-ink-muted hover:text-ink"
                   )}
                 >
                   {turn.black.notation}
@@ -78,11 +78,11 @@ export function MoveHistoryView({
       </div>
 
       {/* Step navigation controls */}
-      <div className="p-2 border-t border-background-border bg-background-subtle flex items-center justify-center gap-2">
+      <div className="p-2 border-t border-background-border bg-background-subtle/70 flex items-center justify-center gap-1 sm:gap-2">
         <button
           onClick={() => onSelectMove(0)}
           disabled={history.length === 0 || activeIndex <= 0}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-background-elevated disabled:opacity-30"
+          className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white disabled:opacity-30 cursor-pointer"
           title="First Move"
         >
           <ChevronFirst className="h-4 w-4" />
@@ -90,7 +90,7 @@ export function MoveHistoryView({
         <button
           onClick={() => onSelectMove(Math.max(0, activeIndex - 1))}
           disabled={history.length === 0 || activeIndex <= 0}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-background-elevated disabled:opacity-30"
+          className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white disabled:opacity-30 cursor-pointer"
           title="Previous Move"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -98,7 +98,7 @@ export function MoveHistoryView({
         <button
           onClick={() => onSelectMove(Math.min(history.length - 1, activeIndex + 1))}
           disabled={history.length === 0 || activeIndex >= history.length - 1}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-background-elevated disabled:opacity-30"
+          className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white disabled:opacity-30 cursor-pointer"
           title="Next Move"
         >
           <ChevronRight className="h-4 w-4" />
@@ -106,7 +106,7 @@ export function MoveHistoryView({
         <button
           onClick={() => onSelectMove(history.length - 1)}
           disabled={history.length === 0 || activeIndex >= history.length - 1}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-background-elevated disabled:opacity-30"
+          className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white disabled:opacity-30 cursor-pointer"
           title="Last Move"
         >
           <ChevronLast className="h-4 w-4" />

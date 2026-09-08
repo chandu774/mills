@@ -9,22 +9,22 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading = false, children, disabled, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+    const baseStyles = "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer";
 
     const variantStyles = {
-      primary: "bg-primary text-slate-950 hover:bg-primary-hover shadow-lg shadow-primary/20 hover:shadow-primary/30 active:bg-primary-active",
-      secondary: "bg-background-elevated text-slate-100 hover:bg-background-border border border-background-border",
-      outline: "border border-background-border text-slate-200 hover:bg-background-elevated hover:text-white",
-      ghost: "text-slate-300 hover:text-white hover:bg-background-card",
-      danger: "bg-rose-600 text-white hover:bg-rose-500 shadow-md shadow-rose-600/20",
-      amber: "bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-lg shadow-amber-500/20 font-bold",
+      primary: "bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow-md active:bg-primary-active",
+      secondary: "bg-background-elevated text-ink hover:bg-background-darker border border-background-border",
+      outline: "border border-background-border text-ink hover:bg-background-subtle bg-white",
+      ghost: "text-ink-muted hover:text-ink hover:bg-background-elevated",
+      danger: "bg-alert-danger text-white hover:bg-red-800 shadow-sm",
+      amber: "bg-gold text-white hover:bg-gold-hover shadow-sm font-bold",
     };
 
     const sizeStyles = {
       sm: "text-xs px-3 py-1.5 min-h-[36px]",
       md: "text-sm px-4 py-2.5 min-h-[44px]",
       lg: "text-base px-6 py-3.5 min-h-[50px]",
-      icon: "h-11 w-11 p-0",
+      icon: "h-10 w-10 p-0",
     };
 
     return (

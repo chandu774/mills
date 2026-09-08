@@ -11,56 +11,61 @@
   }
 
   body {
-    background-color: #0c0f14;
-    color: #f8fafc;
+    background-color: #FAF7F2;
+    color: #1E1915;
     overflow-x: hidden;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Custom subtle scrollbar */
+  /* Custom subtle natural scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #0c0f14;
+    background: #FAF7F2;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #2a3344;
+    background: #D9CEBD;
     border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #3b485d;
+    background: #C4B6A2;
   }
 
   /* Visible focus for accessibility */
   :focus-visible {
-    outline: 2px solid #22c55e;
+    outline: 2px solid #2E5A3A;
     outline-offset: 2px;
   }
 }
 
 @layer utilities {
   .pt-safe {
-    padding-top: max(1rem, env(safe-area-inset-top, 0px));
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
   }
 
   .pb-safe {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   }
 
   .pb-safe-nav {
-    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
   }
 
   .bg-surface-glass {
-    background: rgba(22, 27, 36, 0.85);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  .wood-grain {
+    background: linear-gradient(135deg, #3D2817 0%, #342011 50%, #2A170B 100%);
   }
 }
 

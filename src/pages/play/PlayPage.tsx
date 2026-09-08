@@ -129,11 +129,12 @@ export function PlayPage() {
         <PageHeader
           title="Play Mills"
           subtitle="Select your preferred variant, competitive mode, and time control."
+          className="mb-0 pb-0 border-b-0"
         />
         <Button
           variant="outline"
           onClick={() => setShowJoinModal(true)}
-          className="gap-2 self-start md:self-auto border-background-border text-xs font-bold"
+          className="gap-2 self-start md:self-auto border-background-border text-xs font-bold text-ink bg-white shadow-soft"
         >
           <KeyRound className="h-4 w-4 text-primary" />
           Join with Room Code
@@ -143,8 +144,8 @@ export function PlayPage() {
       {/* Step 1: Variant Selection */}
       <section>
         <div className="flex items-center gap-2 mb-3">
-          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">1</span>
-          <h2 className="text-base font-bold text-white uppercase tracking-wider">Choose Variant</h2>
+          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold">1</span>
+          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Choose Variant</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <VariantCard
@@ -170,8 +171,8 @@ export function PlayPage() {
         {/* Step 2: Game Mode */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">2</span>
-            <h2 className="text-base font-bold text-white uppercase tracking-wider">Select Mode</h2>
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold">2</span>
+            <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Select Mode</h2>
           </div>
           <div className="space-y-2.5">
             {modes.map((m) => {
@@ -182,18 +183,18 @@ export function PlayPage() {
                   key={m.id}
                   onClick={() => setSelectedMode(m.id)}
                   className={cn(
-                    "flex items-center gap-3.5 p-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-150",
+                    "flex items-center gap-3.5 p-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-150 bg-white",
                     isSelected
-                      ? "border-primary bg-background-elevated shadow-md ring-1 ring-primary"
-                      : "border-background-border bg-background-card hover:bg-background-elevated/70"
+                      ? "border-primary bg-primary/[0.04] shadow-soft ring-2 ring-primary/60"
+                      : "border-background-border hover:border-ink/20 hover:shadow-soft"
                   )}
                 >
-                  <div className={cn("p-2.5 rounded-xl", isSelected ? "bg-primary text-slate-950" : "bg-background-elevated text-slate-400")}>
+                  <div className={cn("p-2.5 rounded-xl transition-colors", isSelected ? "bg-primary text-white" : "bg-background-elevated text-ink-muted")}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
-                    <h3 className={cn("text-sm font-bold", isSelected ? "text-white" : "text-slate-200")}>{m.label}</h3>
-                    <p className="text-xs text-slate-400">{m.desc}</p>
+                    <h3 className={cn("text-sm font-bold", isSelected ? "text-primary" : "text-ink")}>{m.label}</h3>
+                    <p className="text-xs text-ink-muted">{m.desc}</p>
                   </div>
                 </div>
               );
@@ -204,8 +205,8 @@ export function PlayPage() {
         {/* Step 3: Time Control */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">3</span>
-            <h2 className="text-base font-bold text-white uppercase tracking-wider">Time Control</h2>
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-bold">3</span>
+            <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Time Control</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {timeControls.map((tc) => {
@@ -215,15 +216,15 @@ export function PlayPage() {
                   key={tc.id}
                   onClick={() => setSelectedTimeControl(tc.id)}
                   className={cn(
-                    "flex flex-col items-center justify-center p-4 rounded-2xl border cursor-pointer select-none transition-all",
+                    "flex flex-col items-center justify-center p-4 rounded-2xl border cursor-pointer select-none transition-all bg-white",
                     isSelected
-                      ? "border-primary bg-background-elevated shadow-md ring-1 ring-primary"
-                      : "border-background-border bg-background-card hover:bg-background-elevated/70"
+                      ? "border-primary bg-primary/[0.04] shadow-soft ring-2 ring-primary/60"
+                      : "border-background-border hover:border-ink/20 hover:shadow-soft"
                   )}
                 >
-                  <Clock className={cn("h-5 w-5 mb-2", isSelected ? "text-primary" : "text-slate-400")} />
-                  <span className="text-base font-black text-white">{tc.label}</span>
-                  <span className="text-[11px] text-slate-400 mt-0.5">{tc.sub}</span>
+                  <Clock className={cn("h-5 w-5 mb-2", isSelected ? "text-primary" : "text-ink-muted")} />
+                  <span className="text-base font-black text-ink">{tc.label}</span>
+                  <span className="text-[11px] text-ink-muted mt-0.5">{tc.sub}</span>
                 </div>
               );
             })}
@@ -231,10 +232,10 @@ export function PlayPage() {
 
           {/* Private Room Share Box (if private selected) */}
           {selectedMode === 'PRIVATE' && (
-            <Card className="mt-4 border-dashed border-sky-500/40 bg-sky-500/5">
+            <Card className="mt-4 border-dashed border-primary/30 bg-primary/[0.02]">
               <CardContent className="p-4 space-y-2.5">
-                <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">Direct Invite Link</span>
-                <p className="text-xs text-slate-400">
+                <span className="text-xs font-bold text-primary uppercase tracking-wider">Direct Invite Link</span>
+                <p className="text-xs text-ink-muted">
                   Click below to generate a room and invite link you can share with any friend.
                 </p>
                 <div className="flex items-center gap-2 pt-1">
@@ -242,7 +243,7 @@ export function PlayPage() {
                     size="sm"
                     variant="secondary"
                     onClick={handleCopyPrivateLink}
-                    className="w-full gap-2 text-xs font-bold border border-sky-500/30"
+                    className="w-full gap-2 text-xs font-bold border border-background-border bg-white text-ink shadow-soft"
                   >
                     {privateLinkCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                     {privateLinkCopied ? 'Link Copied to Clipboard!' : 'Copy Shareable Room Link'}
@@ -256,8 +257,8 @@ export function PlayPage() {
 
       {/* Step 4: Big PLAY Button */}
       <div className="pt-4 border-t border-background-border flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-xs text-slate-400 text-center sm:text-left">
-          Ready to play: <strong className="text-white">{selectedVariant.replace('_', ' ')}</strong> • <strong className="text-white">{selectedMode}</strong> • <strong className="text-white">{selectedTimeControl.replace('_', ' ')}</strong>
+        <div className="text-xs text-ink-muted text-center sm:text-left">
+          Ready to play: <strong className="text-ink">{selectedVariant.replace('_', ' ')}</strong> • <strong className="text-ink">{selectedMode}</strong> • <strong className="text-ink">{selectedTimeControl.replace('_', ' ')}</strong>
         </div>
 
         <Button
@@ -265,9 +266,9 @@ export function PlayPage() {
           variant="primary"
           onClick={handleStartGame}
           disabled={isCreatingRoom}
-          className="w-full sm:w-auto px-10 text-lg font-black gap-3 shadow-emerald-500/25 min-w-[240px]"
+          className="w-full sm:w-auto px-10 text-base font-black gap-3 shadow-md hover:shadow-lg min-w-[240px]"
         >
-          <Play className="h-6 w-6 fill-current" />
+          <Play className="h-5 w-5 fill-current" />
           {isCreatingRoom ? 'CREATING ROOM...' : selectedMode === 'PRIVATE' ? 'CREATE PRIVATE ROOM' : 'PLAY NOW'}
         </Button>
       </div>
@@ -281,14 +282,14 @@ export function PlayPage() {
       >
         <form onSubmit={handleJoinWithCode} className="space-y-4 pt-2">
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-400 block mb-1">Room Code</label>
+            <label className="text-xs font-semibold text-ink-muted block mb-1">Room Code</label>
             <Input
               placeholder="e.g. MILLS-8K2J or 8K2J4N"
               value={joinCodeInput}
               onChange={(e) => setJoinCodeInput(e.target.value)}
               autoFocus
             />
-            {joinError && <p className="text-xs text-rose-400 mt-1">{joinError}</p>}
+            {joinError && <p className="text-xs text-alert-red mt-1">{joinError}</p>}
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
@@ -318,20 +319,20 @@ export function PlayPage() {
           </div>
 
           <div className="text-center space-y-1">
-            <p className="text-2xl font-mono font-bold text-white">00:{searchSeconds.toString().padStart(2, '0')}</p>
-            <p className="text-xs text-slate-400">
-              Expanding rating pool: <span className="text-emerald-400 font-semibold">&plusmn;{50 + Math.floor(searchSeconds / 5) * 25} ELO</span>
+            <p className="text-2xl font-mono font-bold text-ink">00:{searchSeconds.toString().padStart(2, '0')}</p>
+            <p className="text-xs text-ink-muted">
+              Expanding rating pool: <span className="text-primary font-semibold">&plusmn;{50 + Math.floor(searchSeconds / 5) * 25} ELO</span>
             </p>
           </div>
 
-          <div className="w-full bg-background-elevated p-3 rounded-xl border border-background-border text-xs text-slate-400 space-y-1">
+          <div className="w-full bg-background-elevated p-3 rounded-xl border border-background-border text-xs text-ink-muted space-y-1">
             <div className="flex justify-between">
               <span>Selected Variant:</span>
-              <strong className="text-slate-200">{selectedVariant.replace('_', ' ')}</strong>
+              <strong className="text-ink">{selectedVariant.replace('_', ' ')}</strong>
             </div>
             <div className="flex justify-between">
               <span>Time Control:</span>
-              <strong className="text-slate-200">{selectedTimeControl.replace('_', ' ')}</strong>
+              <strong className="text-ink">{selectedTimeControl.replace('_', ' ')}</strong>
             </div>
           </div>
 

@@ -136,7 +136,7 @@ export function TournamentsPage() {
           return (
             <Card
               key={t.id}
-              className={isLive ? "border-emerald-500/40 bg-gradient-to-br from-emerald-500/5 to-transparent" : ""}
+              className={isLive ? "border-primary/40 bg-gradient-to-br from-primary/[0.03] to-white shadow-soft" : "hover:shadow-soft transition-all"}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -145,35 +145,35 @@ export function TournamentsPage() {
                       {isLive && <Flame className="h-3 w-3 mr-1 fill-current" />}
                       {t.status}
                     </Badge>
-                    <span className="text-xs font-mono text-slate-400 bg-background-elevated px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono text-ink-muted bg-background-elevated px-2 py-0.5 rounded border border-background-border">
                       {formatVariantShort(t.variant)}
                     </span>
                   </div>
-                  <span className="text-xs text-slate-400 flex items-center gap-1 font-mono">
+                  <span className="text-xs text-ink-muted flex items-center gap-1 font-mono">
                     <Clock className="h-3.5 w-3.5" />
                     {formatTimeControl(t.timeControl)}
                   </span>
                 </div>
-                <CardTitle className="text-lg">{t.name}</CardTitle>
+                <CardTitle className="text-lg font-bold text-ink">{t.name}</CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-3 pb-3">
-                <p className="text-xs text-slate-300 leading-relaxed">{t.description}</p>
-                <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-background-border">
+                <p className="text-xs text-ink-muted leading-relaxed">{t.description}</p>
+                <div className="flex items-center justify-between text-xs text-ink-muted pt-2.5 border-t border-background-border">
                   <span className="flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-slate-400" />
-                    <strong className="text-white">{t.currentPlayers}</strong> / {t.maxPlayers} players
+                    <Users className="h-3.5 w-3.5 text-ink-light" />
+                    <strong className="text-ink font-semibold">{t.currentPlayers}</strong> / {t.maxPlayers} players
                   </span>
                   <span>{t.startTime}</span>
                 </div>
               </CardContent>
 
-              <CardFooter className="flex items-center justify-between gap-3 pt-3 border-t border-background-border/60">
+              <CardFooter className="flex items-center justify-between gap-3 pt-3 border-t border-background-border">
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => setSelectedTournament(t)}
-                  className="text-xs gap-1"
+                  className="text-xs gap-1 text-ink-muted hover:text-ink"
                 >
                   View Details & Standings <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
@@ -183,10 +183,10 @@ export function TournamentsPage() {
                     size="sm"
                     variant={t.userJoined ? 'outline' : 'primary'}
                     onClick={() => toggleJoin(t.id)}
-                    className="text-xs"
+                    className="text-xs font-bold"
                   >
                     {t.userJoined ? (
-                      <span className="flex items-center gap-1 text-emerald-400">
+                      <span className="flex items-center gap-1 text-primary">
                         <CheckCircle className="h-3.5 w-3.5" /> Registered
                       </span>
                     ) : (
@@ -209,26 +209,26 @@ export function TournamentsPage() {
           description={`${formatVariantShort(selectedTournament.variant)} • ${formatTimeControl(selectedTournament.timeControl)} • ${selectedTournament.status}`}
         >
           <div className="space-y-5 mt-2">
-            <p className="text-xs text-slate-300">{selectedTournament.description}</p>
+            <p className="text-xs text-ink-muted leading-relaxed">{selectedTournament.description}</p>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-background-elevated p-3 rounded-xl border border-background-border">
+            <div className="grid grid-cols-2 gap-3 text-xs bg-background-elevated p-3.5 rounded-xl border border-background-border">
               <div>
-                <span className="text-slate-400">Format:</span>
-                <p className="font-bold text-white mt-0.5">Arena (Continuous Pairings)</p>
+                <span className="text-ink-muted">Format:</span>
+                <p className="font-bold text-ink mt-0.5">Arena (Continuous Pairings)</p>
               </div>
               <div>
-                <span className="text-slate-400">Scoring:</span>
-                <p className="font-bold text-white mt-0.5">Win: 2 pts • Draw: 1 pt • Loss: 0 pt</p>
+                <span className="text-ink-muted">Scoring:</span>
+                <p className="font-bold text-ink mt-0.5">Win: 2 pts • Draw: 1 pt • Loss: 0 pt</p>
               </div>
             </div>
 
             <div>
-              <h4 className="text-sm font-bold text-white mb-2.5 flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-400" /> Standings Table
+              <h4 className="text-sm font-bold text-ink mb-2.5 flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-gold" /> Standings Table
               </h4>
               <div className="overflow-x-auto rounded-xl border border-background-border">
                 <table className="w-full text-xs text-left">
-                  <thead className="bg-background-elevated text-slate-400 font-semibold border-b border-background-border">
+                  <thead className="bg-background-elevated text-ink-muted font-semibold border-b border-background-border">
                     <tr>
                       <th className="py-2.5 px-3">#</th>
                       <th className="py-2.5 px-3">Player</th>
@@ -239,12 +239,12 @@ export function TournamentsPage() {
                   </thead>
                   <tbody className="divide-y divide-background-border">
                     {(selectedTournament.standings || []).map((s) => (
-                      <tr key={s.username} className="hover:bg-background-elevated/50">
-                        <td className="py-2.5 px-3 font-bold text-white">#{s.rank}</td>
-                        <td className="py-2.5 px-3 font-bold text-slate-200">{s.username}</td>
-                        <td className="py-2.5 px-3 font-mono text-slate-400">{s.rating}</td>
-                        <td className="py-2.5 px-3 text-center font-bold text-amber-400 font-mono text-sm">{s.score}</td>
-                        <td className="py-2.5 px-3 text-right text-slate-400">
+                      <tr key={s.username} className="hover:bg-background-elevated/40">
+                        <td className="py-2.5 px-3 font-bold text-ink">#{s.rank}</td>
+                        <td className="py-2.5 px-3 font-bold text-ink">{s.username}</td>
+                        <td className="py-2.5 px-3 font-mono text-ink-muted">{s.rating}</td>
+                        <td className="py-2.5 px-3 text-center font-bold text-gold font-mono text-sm">{s.score}</td>
+                        <td className="py-2.5 px-3 text-right text-ink-muted">
                           {s.wins}W - {s.losses}L - {s.draws}D
                         </td>
                       </tr>

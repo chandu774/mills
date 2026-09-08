@@ -29,10 +29,10 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'pills' }
               aria-selected={isActive}
               onClick={() => onChange(tab.id)}
               className={cn(
-                "flex items-center gap-2 pb-3 pt-1 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap",
+                "flex items-center gap-2 pb-3 pt-1 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer",
                 isActive
                   ? "border-primary text-primary"
-                  : "border-transparent text-slate-400 hover:text-slate-200"
+                  : "border-transparent text-ink-muted hover:text-ink"
               )}
             >
               {tab.icon}
@@ -40,7 +40,7 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'pills' }
               {tab.count !== undefined && (
                 <span className={cn(
                   "rounded-full px-2 py-0.5 text-xs",
-                  isActive ? "bg-primary/20 text-primary" : "bg-background-elevated text-slate-400"
+                  isActive ? "bg-primary/10 text-primary" : "bg-background-elevated text-ink-muted"
                 )}>
                   {tab.count}
                 </span>
@@ -53,7 +53,7 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'pills' }
   }
 
   return (
-    <div role="tablist" className={cn("flex rounded-xl bg-background-elevated p-1 gap-1 overflow-x-auto no-scrollbar", className)}>
+    <div role="tablist" className={cn("flex rounded-xl bg-background-elevated p-1 gap-1 overflow-x-auto no-scrollbar border border-background-border/50", className)}>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
@@ -63,10 +63,10 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'pills' }
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs md:text-sm font-semibold transition-all whitespace-nowrap min-h-[38px]",
+              "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs md:text-sm font-semibold transition-all whitespace-nowrap min-h-[38px] cursor-pointer",
               isActive
-                ? "bg-background-card text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-white text-ink shadow-soft font-bold"
+                : "text-ink-muted hover:text-ink"
             )}
           >
             {tab.icon}
@@ -74,7 +74,7 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'pills' }
             {tab.count !== undefined && (
               <span className={cn(
                 "rounded-full px-1.5 py-0.2 text-[10px]",
-                isActive ? "bg-primary/20 text-primary" : "bg-background-border text-slate-400"
+                isActive ? "bg-primary/15 text-primary" : "bg-background-darker text-ink-muted"
               )}>
                 {tab.count}
               </span>

@@ -132,152 +132,206 @@ export function MillsBoard({
   };
 
   return (
-    <div className={cn("relative w-full max-w-[540px] aspect-square select-none mx-auto", className)}>
-      <svg
-        viewBox="0 0 100 100"
-        className="w-full h-full drop-shadow-2xl rounded-3xl overflow-hidden bg-gradient-to-br from-background-card via-[#131924] to-[#0c1017] border-2 border-background-border"
-        role="grid"
-        aria-label={`${config.name} Board`}
-      >
-        <defs>
-          {/* Radial gradient for White Pieces */}
-          <radialGradient id="whitePieceGradient" cx="35%" cy="30%" r="65%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="70%" stopColor="#e2e8f0" />
-            <stop offset="100%" stopColor="#94a3b8" />
-          </radialGradient>
+    <div className={cn("relative w-full max-w-[560px] aspect-square select-none mx-auto", className)}>
+      {/* Outer physical wood board container with soft natural shadow */}
+      <div className="w-full h-full p-2.5 sm:p-3 rounded-[28px] sm:rounded-[36px] bg-gradient-to-b from-[#4A321E] via-[#382313] to-[#25150A] shadow-board border-4 sm:border-[6px] border-[#2C190D]">
+        <svg
+          viewBox="0 0 100 100"
+          className="w-full h-full rounded-[20px] sm:rounded-[26px] overflow-hidden"
+          role="grid"
+          aria-label={`${config.name} Board`}
+        >
+          <defs>
+            {/* Rich Natural Walnut Wood Surface Gradient */}
+            <radialGradient id="woodBoardGradient" cx="45%" cy="40%" r="75%">
+              <stop offset="0%" stopColor="#432C1B" />
+              <stop offset="60%" stopColor="#352012" />
+              <stop offset="100%" stopColor="#28160B" />
+            </radialGradient>
 
-          {/* Radial gradient for Black Pieces */}
-          <radialGradient id="blackPieceGradient" cx="35%" cy="30%" r="65%">
-            <stop offset="0%" stopColor="#475569" />
-            <stop offset="70%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#090d16" />
-          </radialGradient>
+            {/* Radial gradient for Warm Ivory Pieces */}
+            <radialGradient id="ivoryPieceGradient" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="45%" stopColor="#F9F4EB" />
+              <stop offset="85%" stopColor="#E5D9C7" />
+              <stop offset="100%" stopColor="#C8BCAB" />
+            </radialGradient>
 
-          {/* Wood/Slate subtle pattern effect */}
-          <filter id="boardGlow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
-          </filter>
-        </defs>
+            {/* Radial gradient for Dark Walnut Pieces */}
+            <radialGradient id="walnutPieceGradient" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#4A3423" />
+              <stop offset="40%" stopColor="#312014" />
+              <stop offset="85%" stopColor="#1C1008" />
+              <stop offset="100%" stopColor="#100804" />
+            </radialGradient>
 
-        {/* Outer board border frame */}
-        <rect
-          x="3"
-          y="3"
-          width="94"
-          height="94"
-          rx="6"
-          fill="none"
-          stroke="#263345"
-          strokeWidth="1.2"
-        />
+            {/* Soft Piece Shadow Blur */}
+            <filter id="pieceShadowBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
+            </filter>
+          </defs>
 
-        {/* Grid Connection Lines */}
-        <g stroke="#3b485d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          {boardLines.map((line, idx) => (
-            <line
-              key={`line-${idx}`}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-            />
-          ))}
-        </g>
+          {/* Board Wood Surface Background */}
+          <rect
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            fill="url(#woodBoardGradient)"
+          />
 
-        {/* Active Mill Glowing Lines */}
-        {state.lastMillPoints && (
-          <g stroke="#f59e0b" strokeWidth="2.4" strokeLinecap="round" className="animate-pulse">
-            {config.mills
-              .filter((mill) => mill.every((p) => state.lastMillPoints?.includes(p)))
-              .map((mill, idx) => {
-                const p1 = getPointCoord(mill[0]);
-                const p2 = getPointCoord(mill[mill.length - 1]);
-                return (
-                  <line
-                    key={`active-mill-line-${idx}`}
-                    x1={p1.x}
-                    y1={p1.y}
-                    x2={p2.x}
-                    y2={p2.y}
-                  />
-                );
-              })}
+          {/* Subtle Inset Wood Bevel Border */}
+          <rect
+            x="3.5"
+            y="3.5"
+            width="93"
+            height="93"
+            rx="5"
+            fill="none"
+            stroke="#1D1007"
+            strokeWidth="1.2"
+          />
+          <rect
+            x="4.2"
+            y="4.2"
+            width="91.6"
+            height="91.6"
+            rx="4.5"
+            fill="none"
+            stroke="rgba(110, 72, 41, 0.4)"
+            strokeWidth="0.6"
+          />
+
+          {/* Grid Connection Lines (Warm Engraved Inlay Relief) */}
+          <g strokeLinecap="round" strokeLinejoin="round">
+            {/* Subtle shadow beneath engraved line */}
+            <g stroke="#170C05" strokeWidth="1.7">
+              {boardLines.map((line, idx) => (
+                <line
+                  key={`line-shadow-${idx}`}
+                  x1={line.x1}
+                  y1={line.y1 + 0.3}
+                  x2={line.x2}
+                  y2={line.y2 + 0.3}
+                />
+              ))}
+            </g>
+            {/* Main Walnut Engraved Line */}
+            <g stroke="#6E4829" strokeWidth="1.4">
+              {boardLines.map((line, idx) => (
+                <line
+                  key={`line-main-${idx}`}
+                  x1={line.x1}
+                  y1={line.y1}
+                  x2={line.x2}
+                  y2={line.y2}
+                />
+              ))}
+            </g>
           </g>
-        )}
 
-        {/* Board Points & Interaction Touch Targets */}
-        {Array.from({ length: config.pointCount }).map((_, pointIndex) => {
-          const coord = getPointCoord(pointIndex);
-          const piece = state.board[pointIndex];
-          const isLegalTarget = legalDestinations.includes(pointIndex);
-          const isEligibleCapture = eligibleCaptures.includes(pointIndex);
-          const isSelected = selectedPoint === pointIndex;
-          const isLastMove = isLastMovePoint(pointIndex);
-          const inActiveMill = isMillPoint(pointIndex);
+          {/* Active Mill Formed Lines (Muted Gold Inlay) */}
+          {state.lastMillPoints && (
+            <g stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" className="animate-pulse">
+              {config.mills
+                .filter((mill) => mill.every((p) => state.lastMillPoints?.includes(p)))
+                .map((mill, idx) => {
+                  const p1 = getPointCoord(mill[0]);
+                  const p2 = getPointCoord(mill[mill.length - 1]);
+                  return (
+                    <line
+                      key={`active-mill-line-${idx}`}
+                      x1={p1.x}
+                      y1={p1.y}
+                      x2={p2.x}
+                      y2={p2.y}
+                    />
+                  );
+                })}
+            </g>
+          )}
 
-          return (
-            <g key={`pt-${pointIndex}`}>
-              {/* Point Intersection Marker Dot (when empty) */}
-              {!piece && (
+          {/* Board Points & Interaction Touch Targets */}
+          {Array.from({ length: config.pointCount }).map((_, pointIndex) => {
+            const coord = getPointCoord(pointIndex);
+            const piece = state.board[pointIndex];
+            const isLegalTarget = legalDestinations.includes(pointIndex);
+            const isEligibleCapture = eligibleCaptures.includes(pointIndex);
+            const isSelected = selectedPoint === pointIndex;
+            const isLastMove = isLastMovePoint(pointIndex);
+            const inActiveMill = isMillPoint(pointIndex);
+
+            return (
+              <g key={`pt-${pointIndex}`}>
+                {/* Empty Intersection Inlay Dot */}
+                {!piece && (
+                  <g>
+                    <circle
+                      cx={coord.x}
+                      cy={coord.y + 0.3}
+                      r="2.2"
+                      fill="#1A0D06"
+                    />
+                    <circle
+                      cx={coord.x}
+                      cy={coord.y}
+                      r="1.9"
+                      fill="#8C6544"
+                      stroke="#2C190D"
+                      strokeWidth="0.6"
+                    />
+                  </g>
+                )}
+
+                {/* Legal Move Destination Indicator (Natural Forest Green Ring) */}
+                {isLegalTarget && (
+                  <g className="cursor-pointer">
+                    <circle
+                      cx={coord.x}
+                      cy={coord.y}
+                      r="4.2"
+                      fill="rgba(46, 90, 58, 0.28)"
+                      stroke="#2E5A3A"
+                      strokeWidth="1.2"
+                      className="animate-pulse"
+                    />
+                    <circle
+                      cx={coord.x}
+                      cy={coord.y}
+                      r="2.2"
+                      fill="#2E5A3A"
+                    />
+                  </g>
+                )}
+
+                {/* Piece Rendering */}
+                {piece && (
+                  <Piece
+                    color={piece as PlayerColor}
+                    cx={coord.x}
+                    cy={coord.y}
+                    isSelected={isSelected}
+                    isEligibleCapture={isEligibleCapture}
+                    isMillPiece={inActiveMill}
+                    isLastMove={isLastMove}
+                    onClick={() => !disabled && onPointClick(pointIndex)}
+                  />
+                )}
+
+                {/* Large Invisible Hit Area for Ergonomic Touch (Min 48px equivalent) */}
                 <circle
                   cx={coord.x}
                   cy={coord.y}
-                  r="2.2"
-                  fill="#475569"
-                  stroke="#1e293b"
-                  strokeWidth="0.8"
-                />
-              )}
-
-              {/* Legal Move Destination Indicator Ring / Dot */}
-              {isLegalTarget && (
-                <g className="cursor-pointer">
-                  <circle
-                    cx={coord.x}
-                    cy={coord.y}
-                    r="4.2"
-                    fill="rgba(34, 197, 94, 0.3)"
-                    stroke="#22c55e"
-                    strokeWidth="1.2"
-                    className="animate-pulse"
-                  />
-                  <circle
-                    cx={coord.x}
-                    cy={coord.y}
-                    r="2.2"
-                    fill="#22c55e"
-                  />
-                </g>
-              )}
-
-              {/* Piece Rendering */}
-              {piece && (
-                <Piece
-                  color={piece as PlayerColor}
-                  cx={coord.x}
-                  cy={coord.y}
-                  isSelected={isSelected}
-                  isEligibleCapture={isEligibleCapture}
-                  isMillPiece={inActiveMill}
-                  isLastMove={isLastMove}
+                  r="7.5"
+                  fill="transparent"
+                  className="cursor-pointer"
                   onClick={() => !disabled && onPointClick(pointIndex)}
                 />
-              )}
-
-              {/* Large Invisible Hit Area for Easy Touch on Phones (Min 48px equivalent) */}
-              <circle
-                cx={coord.x}
-                cy={coord.y}
-                r="7.5"
-                fill="transparent"
-                className="cursor-pointer"
-                onClick={() => !disabled && onPointClick(pointIndex)}
-              />
-            </g>
-          );
-        })}
-      </svg>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
     </div>
   );
 }
