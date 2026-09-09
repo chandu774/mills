@@ -23,7 +23,8 @@ export interface UseMultiplayerGameProps {
   };
   engine: GameEngine;
   onEngineStateUpdate: (state: GameState) => void;
-  onClockUpdate?: (clocks: { WHITE?: number; BLACK?: number }) => void;
+  onClockUpdate?: (clocks: { WHITE?: number; BLACK?: number; turnStartedAt?: number }) => void;
+  onGameFinished?: () => void;
 }
 
 export function useMultiplayerGame({
@@ -32,6 +33,7 @@ export function useMultiplayerGame({
   engine,
   onEngineStateUpdate,
   onClockUpdate,
+  onGameFinished,
 }: UseMultiplayerGameProps) {
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [myColor, setMyColor] = useState<PlayerColor | 'SPECTATOR'>('WHITE');
@@ -74,11 +76,12 @@ export function useMultiplayerGame({
               : prev
           );
         }
+        onGameFinished?.();
       } catch (err) {
         console.warn('[useMultiplayerGame] Error completing game:', err);
       }
     },
-    [roomId]
+    [roomId, onGameFinished]
   );
   const completeGameRef = useRef(completeGame);
   completeGameRef.current = completeGame;
@@ -191,8 +194,11 @@ export function useMultiplayerGame({
             if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(res.state.status)) {
               completeGameRef.current(res.state.winner, res.state.winReason || 'Game finished.');
             }
-            if (payload.clocks && onClockUpdate) {
-              onClockUpdate(payload.clocks);
+            if (onClockUpdate) {
+              onClockUpdate({
+                ...(payload.clocks || {}),
+                turnStartedAt: payload.turnStartedAt || Date.now(),
+              });
             }
           }
           break;
@@ -347,7 +353,7 @@ export function useMultiplayerGame({
 
   // Actions
   const broadcastMove = useCallback(
-    (move: PlayerMove, clocks?: { WHITE?: number; BLACK?: number }) => {
+    (move: PlayerMove, clocks?: { WHITE?: number; BLACK?: number }, turnStartedAt?: number) => {
       if (!channelRef.current) return;
       const state = engineRef.current.getState();
       const history = engineRef.current.getHistory();
@@ -358,6 +364,7 @@ export function useMultiplayerGame({
         fen,
         clocks,
         moveNumber: history.length,
+        turnStartedAt: turnStartedAt || Date.now(),
       });
 
       // Record move to persistence layer
@@ -373,6 +380,19 @@ export function useMultiplayerGame({
       if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(state.status)) {
         completeGame(state.winner, state.winReason || 'Game finished.');
       }
+    },
+    [roomId, completeGame]
+  );
+
+  const broadcastTimeout = useCallback(
+    (player: PlayerColor) => {
+      if (!channelRef.current) return;
+      channelRef.current.send({
+        type: 'TIMEOUT',
+        player,
+      });
+      const winner = player === 'WHITE' ? 'BLACK' : 'WHITE';
+      completeGame(winner, `${player === 'WHITE' ? 'White' : 'Black'} ran out of time.`);
     },
     [roomId, completeGame]
   );
@@ -493,6 +513,7 @@ export function useMultiplayerGame({
     sendChatMessage,
     broadcastMove,
     broadcastResign,
+    broadcastTimeout,
     offerDraw,
     respondToDraw,
     offerRematch,

@@ -12,8 +12,8 @@ export interface VariantCardProps {
 export function VariantCard({ variant, isSelected, onSelect, className }: VariantCardProps) {
   const config = {
     MILLS_3: {
-      title: '3-Piece Mills',
-      subtitle: 'Fast & Tactical',
+      title: '3 Mills',
+      subtitle: '3-Piece Mills',
       pieces: 3,
       points: 9,
       icon: Zap,
@@ -48,8 +48,8 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
       )
     },
     MILLS_6: {
-      title: '6-Piece Mills',
-      subtitle: 'Strategic & Balanced',
+      title: '6 Mills',
+      subtitle: '6-Piece Mills',
       pieces: 6,
       points: 16,
       icon: Shield,
@@ -92,8 +92,8 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
       )
     },
     MILLS_9: {
-      title: "9-Piece Men's Morris",
-      subtitle: 'Classic Championship',
+      title: '9 Mills',
+      subtitle: "9-Piece Men's Morris",
       pieces: 9,
       points: 24,
       icon: Crown,
@@ -130,7 +130,15 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect?.(variant)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect?.(variant);
+        }
+      }}
       className={cn(
         "group relative flex flex-col justify-between rounded-2xl border p-5 transition-all duration-200 cursor-pointer select-none bg-white",
         isSelected
@@ -156,11 +164,7 @@ export function VariantCard({ variant, isSelected, onSelect, className }: Varian
         </div>
       </div>
 
-      <p className="my-4 text-xs text-ink-muted leading-relaxed">
-        {config.description}
-      </p>
-
-      <div className="flex items-center justify-between pt-3 border-t border-background-border text-xs">
+      <div className="flex items-center justify-between pt-3 mt-3 border-t border-background-border text-xs">
         <span className="text-ink-muted">
           <strong className="text-ink font-semibold">{config.pieces}</strong> pieces / player
         </span>

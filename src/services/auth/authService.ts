@@ -1,10 +1,15 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { UserProfile, UserRating } from '@/lib/types';
+import { getAuthRedirectUrl } from '@/lib/auth/redirect';
 
 export interface AuthResponse<T> {
   data: T | null;
   error: string | null;
 }
+
+// Cached RPC availability flags to avoid repeated 404 console errors if RPC is not yet in schema cache
+let isCheckUsernameRpcAvailable: boolean | null = null;
+let isSetUsernameRpcAvailable: boolean | null = null;
 
 export const authService = {
   /**
@@ -123,18 +128,24 @@ export const authService = {
   },
 
   /**
-   * Real Google OAuth sign in
+   * Real Google OAuth sign in with dynamic origin redirect
    */
-  async signInWithGoogle(): Promise<{ error: string | null }> {
+  async signInWithGoogle(returnPath: string = '/'): Promise<{ error: string | null }> {
     if (!isSupabaseConfigured() || !supabase) {
       return { error: 'Database not connected.' };
     }
 
     try {
+      const redirectTo = getAuthRedirectUrl(returnPath);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
         },
       });
 
@@ -164,34 +175,43 @@ export const authService = {
     }
 
     if (!isSupabaseConfigured() || !supabase) {
-      return { available: true };
+      return { available: false, error: 'Database not connected. Real Supabase connection required.' };
     }
 
     try {
-      // 1. Try RPC check if function is installed
-      const { data: rpcAvailable, error: rpcErr } = await supabase.rpc('check_username_available', {
-        p_username: clean,
-      });
+      // 1. Try RPC check if function is supported (avoid repeating call if known nonexistent)
+      if (isCheckUsernameRpcAvailable !== false) {
+        const { data: rpcAvailable, error: rpcErr } = await supabase.rpc('check_username_available', {
+          p_username: clean,
+        });
 
-      if (!rpcErr && typeof rpcAvailable === 'boolean') {
-        if (rpcAvailable) {
-          return { available: true };
+        if (!rpcErr && typeof rpcAvailable === 'boolean') {
+          isCheckUsernameRpcAvailable = true;
+          if (rpcAvailable) {
+            return { available: true };
+          }
+        } else if (rpcErr) {
+          if (rpcErr.code === 'PGRST202' || rpcErr.message?.includes('Could not find')) {
+            isCheckUsernameRpcAvailable = false;
+          } else {
+            console.warn('[authService] check_username_available notice:', rpcErr.message);
+          }
         }
-      } else {
-        // Fallback: direct table query with case-insensitivity
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .ilike('username', clean)
-          .maybeSingle();
+      }
 
-        if (error && error.code !== 'PGRST116') {
-          console.warn('[authService] Username check notice:', error.message);
-        }
+      // 2. Direct database query fallback with case-insensitivity
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('username', clean)
+        .maybeSingle();
 
-        if (!data) {
-          return { available: true };
-        }
+      if (error && error.code !== 'PGRST116') {
+        return { available: false, error: 'Database check failed: ' + error.message };
+      }
+
+      if (!data) {
+        return { available: true };
       }
 
       // Username is taken; generate 3 smart suggestions
@@ -199,7 +219,7 @@ export const authService = {
       const suggestions = [
         `${base}${Math.floor(100 + Math.random() * 900)}`,
         `${base}2026`,
-        `${base}m`,
+        `${base}Pro`,
       ];
 
       return {
@@ -227,21 +247,33 @@ export const authService = {
     }
 
     if (!isSupabaseConfigured() || !supabase) {
-      return { success: true };
+      return { success: false, error: 'Database not connected. Cannot set username.' };
     }
 
     try {
-      // Try atomic RPC first
-      const { data: rpcRes, error: rpcErr } = await supabase.rpc('set_user_username', {
-        p_username: clean,
-      });
+      // 1. Try atomic server-side RPC first (operates on auth.uid())
+      if (isSetUsernameRpcAvailable !== false) {
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc('set_user_username', {
+          p_username: clean,
+        });
 
-      if (!rpcErr && rpcRes) {
-        if (rpcRes.success) return { success: true };
-        return { success: false, error: rpcRes.error || 'Username already taken.' };
+        if (!rpcErr && rpcRes) {
+          isSetUsernameRpcAvailable = true;
+          if (rpcRes.success) return { success: true };
+          return { success: false, error: rpcRes.error || 'Username already taken.' };
+        }
+
+        if (rpcErr) {
+          if (rpcErr.code === 'PGRST202' || rpcErr.message?.includes('Could not find')) {
+            isSetUsernameRpcAvailable = false;
+          } else {
+            return { success: false, error: rpcErr.message || 'Failed to set username.' };
+          }
+        }
       }
 
-      // Direct update fallback
+      // 2. Direct update fallback: only update existing database columns in profiles
+      // Do NOT send nonexistent columns to avoid HTTP 400 Bad Request
       const { error: updateErr } = await supabase
         .from('profiles')
         .update({
@@ -274,8 +306,9 @@ export const authService = {
     }
 
     try {
+      const redirectTo = getAuthRedirectUrl('/login');
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo,
       });
 
       if (error) return { success: false, error: error.message };

@@ -72,28 +72,57 @@ describe('Phase 1: UI Primitives', () => {
 });
 
 describe('Phase 1: Platform Navigation & Views', () => {
-  it('renders Home page by default with key CTA and rating snapshot', () => {
+  it('renders Home page with only the 3 prominent game options', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <App />
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/Play Mills Online/i)).toBeInTheDocument();
-    expect(screen.getByText(/Choose Your Variant/i)).toBeInTheDocument();
+    expect(screen.getByText('RANKED')).toBeInTheDocument();
+    expect(screen.getByText('PLAY BOTS')).toBeInTheDocument();
+    expect(screen.getByText('CHALLENGE FRIENDS')).toBeInTheDocument();
   });
 
-  it('renders Play page with all 3 variants when navigating to /play', () => {
+  it('renders Ranked configuration page with all 3 variants', () => {
     render(
-      <MemoryRouter initialEntries={['/play']}>
+      <MemoryRouter initialEntries={['/play/ranked']}>
         <App />
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Play Mills')).toBeInTheDocument();
-    expect(screen.getByText('3-Piece Mills')).toBeInTheDocument();
-    expect(screen.getByText('6-Piece Mills')).toBeInTheDocument();
-    expect(screen.getByText("9-Piece Men's Morris")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /RANKED/i })).toBeInTheDocument();
+    expect(screen.getAllByText('3 Mills').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('6 Mills').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('9 Mills').length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByRole('button', { name: /PLAY NOW/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/30s \/ move/i)).toBeInTheDocument();
+  });
+
+  it('renders Play Bots configuration page with difficulties and time controls', () => {
+    render(
+      <MemoryRouter initialEntries={['/play/bots']}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('heading', { name: /PLAY BOTS/i })).toBeInTheDocument();
+    expect(screen.getByText('Easy')).toBeInTheDocument();
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(screen.getByText('Hard')).toBeInTheDocument();
+    expect(screen.getByText('Expert')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /PLAY NOW/i })).toBeInTheDocument();
+  });
+
+  it('renders Challenge Friends configuration page with challenge CTA', async () => {
+    render(
+      <MemoryRouter initialEntries={['/play/friends']}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /CHALLENGE FRIENDS/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /CHALLENGE/i })).toBeInTheDocument();
   });
 
   it('renders Tournaments page with tabs and arena listings', () => {

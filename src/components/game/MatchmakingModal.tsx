@@ -81,7 +81,7 @@ export function MatchmakingModal({
     if (countdown === null || !matchedGameId) return;
 
     if (countdown <= 0) {
-      navigate(`/game?room=${matchedGameId}&variant=${variant}&time=${timeControl}`);
+      navigate(`/game?room=${matchedGameId}&variant=${variant}&time=${timeControl}&mode=${mode}`);
       onClose();
       return;
     }
@@ -119,7 +119,7 @@ export function MatchmakingModal({
             <span>•</span>
             <span>{mode}</span>
             <span>•</span>
-            <span>{formatTimeControl(timeControl)}</span>
+            <span>{mode === 'RANKED' ? '30s / move' : formatTimeControl(timeControl)}</span>
           </div>
         </div>
 

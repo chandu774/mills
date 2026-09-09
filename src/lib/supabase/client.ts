@@ -15,7 +15,14 @@ export const isSupabaseConfigured = (): boolean => {
 };
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+      },
+    })
   : null;
 
 export interface DatabaseStatus {

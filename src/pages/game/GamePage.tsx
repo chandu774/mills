@@ -13,6 +13,7 @@ import { InGameChat, InGameChatMessage } from '@/components/game/InGameChat';
 import { Drawer } from '@/components/ui/Drawer';
 import { useAuth } from '@/hooks/useAuth';
 import { useMultiplayerGame } from '@/hooks/useMultiplayerGame';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   ArrowLeft,
   Copy,
@@ -25,19 +26,31 @@ import {
   BookOpen,
   MessageCircle,
 } from 'lucide-react';
+import { BotDifficulty, getBestBotMove, getBotProfile } from '@/game/ai/botEngine';
 import { Button } from '@/components/ui/Button';
 
 export function GamePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const variantParam = (searchParams.get('variant') as GameVariant) || 'MILLS_9';
   const timeParam = (searchParams.get('time') as TimeControl) || '5_MIN';
   const roomIdParam = searchParams.get('room');
+  const modeParam = searchParams.get('mode');
+  const difficultyParam = (searchParams.get('difficulty') as BotDifficulty) || 'MEDIUM';
+  const isBotMode = modeParam === 'BOT' || modeParam === 'AI';
+  const isRankedFromParam = modeParam === 'RANKED';
+  const isRankedRef = useRef(isRankedFromParam);
+
+  const botProfile = useMemo(() => {
+    return getBotProfile(difficultyParam);
+  }, [difficultyParam]);
 
   // Clock duration in seconds
   const initialSeconds = useMemo(() => {
+    if (isRankedFromParam) return 30;
     switch (timeParam) {
       case '3_MIN':
         return 180;
@@ -48,7 +61,7 @@ export function GamePage() {
       default:
         return undefined;
     }
-  }, [timeParam]);
+  }, [isRankedFromParam, timeParam]);
 
   // Engine instance reference
   const engineRef = useRef<GameEngine>(new GameEngine(variantParam));
@@ -62,11 +75,12 @@ export function GamePage() {
   const [desktopSideTab, setDesktopSideTab] = useState<'moves' | 'chat'>('moves');
   const [localChatMessages, setLocalChatMessages] = useState<InGameChatMessage[]>([]);
 
-  // Clocks for White and Black
+  // Clocks for White and Black (30s per move in Ranked mode)
   const [clocks, setClocks] = useState<{ WHITE?: number; BLACK?: number }>({
-    WHITE: initialSeconds,
-    BLACK: initialSeconds,
+    WHITE: isRankedFromParam ? 30 : initialSeconds,
+    BLACK: isRankedFromParam ? 30 : initialSeconds,
   });
+  const turnStartTimeRef = useRef<number>(Date.now());
 
   const currentUser = useMemo(() => {
     return {
@@ -79,17 +93,32 @@ export function GamePage() {
   // Multiplayer Hook (if room param is present)
   const isMultiplayer = Boolean(roomIdParam);
 
-  const handleEngineStateUpdate = useCallback((newState: GameState) => {
-    setEngineState(newState);
-    if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(newState.status)) {
-      setShowGameOverModal(true);
-      refreshProfile();
-    }
-  }, [refreshProfile]);
+  const handleEngineStateUpdate = useCallback(
+    (newState: GameState) => {
+      setEngineState(newState);
+      if (isRankedRef.current) {
+        turnStartTimeRef.current = Date.now();
+        setClocks({ WHITE: 30, BLACK: 30 });
+      }
+      if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(newState.status)) {
+        setShowGameOverModal(true);
+        refreshProfile();
+      }
+    },
+    [refreshProfile]
+  );
 
-  const handleClockUpdate = useCallback((newClocks: { WHITE?: number; BLACK?: number }) => {
-    setClocks(newClocks);
-  }, []);
+  const handleClockUpdate = useCallback(
+    (newClocks: { WHITE?: number; BLACK?: number; turnStartedAt?: number }) => {
+      if (isRankedRef.current) {
+        turnStartTimeRef.current = newClocks.turnStartedAt || Date.now();
+        setClocks({ WHITE: 30, BLACK: 30 });
+      } else {
+        setClocks(newClocks);
+      }
+    },
+    []
+  );
 
   const {
     room,
@@ -106,6 +135,7 @@ export function GamePage() {
     sendChatMessage: sendMultiplayerChat,
     broadcastMove,
     broadcastResign,
+    broadcastTimeout,
     offerDraw,
     respondToDraw,
     offerRematch,
@@ -116,7 +146,31 @@ export function GamePage() {
     engine: engineRef.current,
     onEngineStateUpdate: handleEngineStateUpdate,
     onClockUpdate: handleClockUpdate,
+    onGameFinished: refreshProfile,
   });
+
+  const isRanked = isRankedFromParam || room?.mode === 'RANKED';
+  isRankedRef.current = isRanked;
+
+  // Sync clocks when room mode resolves as RANKED
+  useEffect(() => {
+    if (isRanked) {
+      setClocks((prev) => ({
+        WHITE: prev.WHITE !== undefined ? prev.WHITE : 30,
+        BLACK: prev.BLACK !== undefined ? prev.BLACK : 30,
+      }));
+    }
+  }, [isRanked]);
+
+  // Reset turn timer when multiplayer match connects
+  useEffect(() => {
+    if (isMultiplayer && connectionStatus === 'CONNECTED') {
+      turnStartTimeRef.current = Date.now();
+      if (isRanked) {
+        setClocks({ WHITE: 30, BLACK: 30 });
+      }
+    }
+  }, [isMultiplayer, connectionStatus, isRanked]);
 
   const activeChatMessages = isMultiplayer ? multiplayerChatMessages : localChatMessages;
 
@@ -151,34 +205,139 @@ export function GamePage() {
 
   // Clock countdown interval
   useEffect(() => {
-    if (isGameOver || initialSeconds === undefined) return;
-    if (isMultiplayer && connectionStatus === 'WAITING') return;
+    if (isGameOver) return;
+    if (initialSeconds === undefined && !isRanked) return;
+    if (isMultiplayer && connectionStatus === 'WAITING') {
+      turnStartTimeRef.current = Date.now();
+      return;
+    }
 
-    const interval = setInterval(() => {
-      setClocks((prev) => {
+    if (isRanked) {
+      // 30-second per-move timer for Ranked
+      const interval = setInterval(() => {
         const active = engineState.currentPlayer;
-        const currentVal = prev[active];
-        if (currentVal === undefined) return prev;
+        const now = Date.now();
+        const elapsedSec = (now - turnStartTimeRef.current) / 1000;
+        const remaining = Math.max(0, Math.ceil(30 - elapsedSec));
 
-        if (currentVal <= 1) {
-          // Time expired!
+        setClocks((prev) => {
+          if (prev[active] === remaining) return prev;
+          return {
+            WHITE: active === 'WHITE' ? remaining : 30,
+            BLACK: active === 'BLACK' ? remaining : 30,
+          };
+        });
+
+        // Determine timeout threshold: immediate at 30s for local turn, 1.5s grace for remote opponent
+        const isMyTurnInMp = isMultiplayer && active === myColor;
+        const timeoutThreshold = (!isMultiplayer || isMyTurnInMp) ? 30 : 31.5;
+
+        if (elapsedSec >= timeoutThreshold) {
           engineRef.current.timeout(active);
           setEngineState(engineRef.current.getState());
           setShowGameOverModal(true);
-          return { ...prev, [active]: 0 };
+          if (isMultiplayer) {
+            broadcastTimeout(active);
+          }
+          clearInterval(interval);
         }
+      }, 250);
 
-        return { ...prev, [active]: currentVal - 1 };
-      });
-    }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      // Standard total match clock (1-second tick)
+      const interval = setInterval(() => {
+        setClocks((prev) => {
+          const active = engineState.currentPlayer;
+          const currentVal = prev[active];
+          if (currentVal === undefined) return prev;
 
-    return () => clearInterval(interval);
-  }, [isGameOver, initialSeconds, isMultiplayer, connectionStatus, engineState.currentPlayer]);
+          if (currentVal <= 1) {
+            // Time expired!
+            engineRef.current.timeout(active);
+            setEngineState(engineRef.current.getState());
+            setShowGameOverModal(true);
+            if (isMultiplayer) {
+              broadcastTimeout(active);
+            }
+            return { ...prev, [active]: 0 };
+          }
+
+          return { ...prev, [active]: currentVal - 1 };
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [
+    isGameOver,
+    initialSeconds,
+    isRanked,
+    isMultiplayer,
+    connectionStatus,
+    engineState.currentPlayer,
+    myColor,
+    broadcastTimeout,
+  ]);
+
+  // Automated Bot Turn Execution
+  useEffect(() => {
+    if (!isBotMode || isGameOver || currentReplayIndex !== null) return;
+    if (engineState.currentPlayer !== 'BLACK') return;
+
+    const timer = setTimeout(() => {
+      const botMove = getBestBotMove(engineRef.current, difficultyParam);
+      if (!botMove) return;
+
+      const result = engineRef.current.makeMove(botMove);
+      if (result.success) {
+        setEngineState(result.state);
+        setSelectedPoint(null);
+        if (isRanked) {
+          turnStartTimeRef.current = Date.now();
+          setClocks({ WHITE: 30, BLACK: 30 });
+        }
+        if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(result.state.status)) {
+          setShowGameOverModal(true);
+        } else if (result.state.status === 'CAPTURE_PENDING') {
+          // If bot formed a mill, select and execute capture after brief delay
+          const capTimer = setTimeout(() => {
+            const captureMove = getBestBotMove(engineRef.current, difficultyParam);
+            if (captureMove) {
+              const capResult = engineRef.current.makeMove(captureMove);
+              if (capResult.success) {
+                setEngineState(capResult.state);
+                if (isRanked) {
+                  turnStartTimeRef.current = Date.now();
+                  setClocks({ WHITE: 30, BLACK: 30 });
+                }
+                if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(capResult.state.status)) {
+                  setShowGameOverModal(true);
+                }
+              }
+            }
+          }, 450);
+          return () => clearTimeout(capTimer);
+        }
+      }
+    }, 550);
+
+    return () => clearTimeout(timer);
+  }, [
+    isBotMode,
+    isGameOver,
+    currentReplayIndex,
+    engineState.currentPlayer,
+    engineState.status,
+    difficultyParam,
+    isRanked,
+  ]);
 
   // Handle board intersection click
   const handlePointClick = (pointIndex: number) => {
     if (isGameOver || currentReplayIndex !== null) return;
     if (isMultiplayer && (!isMyTurn || connectionStatus === 'WAITING')) return;
+    if (isBotMode && engineState.currentPlayer === 'BLACK') return;
 
     const engine = engineRef.current;
     const state = engine.getState();
@@ -189,11 +348,15 @@ export function GamePage() {
       if (result.success) {
         setEngineState(result.state);
         setSelectedPoint(null);
+        if (isRanked) {
+          turnStartTimeRef.current = Date.now();
+          setClocks({ WHITE: 30, BLACK: 30 });
+        }
         if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(result.state.status)) {
           setShowGameOverModal(true);
         }
         if (isMultiplayer) {
-          broadcastMove(move, clocks);
+          broadcastMove(move, isRanked ? { WHITE: 30, BLACK: 30 } : clocks, Date.now());
         }
       }
     };
@@ -275,9 +438,10 @@ export function GamePage() {
     setSelectedPoint(null);
     setCurrentReplayIndex(null);
     setShowGameOverModal(false);
+    turnStartTimeRef.current = Date.now();
     setClocks({
-      WHITE: initialSeconds,
-      BLACK: initialSeconds,
+      WHITE: isRanked ? 30 : initialSeconds,
+      BLACK: isRanked ? 30 : initialSeconds,
     });
   };
 
@@ -306,17 +470,21 @@ export function GamePage() {
     ? myColor === 'WHITE'
       ? currentUser.displayName + ' (You)'
       : opponent?.displayName || 'Opponent'
-    : isFlipped
-      ? 'Player 2 (White)'
-      : 'Player 1 (White)';
+    : isBotMode
+      ? currentUser.displayName + ' (You)'
+      : isFlipped
+        ? 'Player 2 (White)'
+        : 'Player 1 (White)';
 
   const blackName = isMultiplayer
     ? myColor === 'BLACK'
       ? currentUser.displayName + ' (You)'
       : opponent?.displayName || 'Opponent'
-    : isFlipped
-      ? 'Player 1 (Black)'
-      : 'Player 2 (Black)';
+    : isBotMode
+      ? botProfile.displayName
+      : isFlipped
+        ? 'Player 1 (Black)'
+        : 'Player 2 (Black)';
 
   const topColor = isFlipped ? 'WHITE' : 'BLACK';
   const bottomColor = isFlipped ? 'BLACK' : 'WHITE';
@@ -340,7 +508,9 @@ export function GamePage() {
     ? myColor === 'BLACK'
       ? userRating
       : opponentRating
-    : userRating;
+    : isBotMode
+      ? botProfile.rating
+      : userRating;
 
   const topRating = isFlipped ? whiteRating : blackRating;
   const bottomRating = isFlipped ? blackRating : whiteRating;
@@ -379,7 +549,9 @@ export function GamePage() {
       : myColor === 'BLACK'
         ? true
         : opponent?.isOnline
-    : undefined;
+    : isBotMode
+      ? true
+      : undefined;
   const bottomIsOnline = isMultiplayer
     ? isFlipped
       ? myColor === 'BLACK'
@@ -388,7 +560,9 @@ export function GamePage() {
       : myColor === 'WHITE'
         ? true
         : opponent?.isOnline
-    : undefined;
+    : isBotMode
+      ? true
+      : undefined;
 
   return (
     <div className="max-w-6xl mx-auto space-y-2 sm:space-y-4 animate-in fade-in duration-200">
@@ -412,10 +586,14 @@ export function GamePage() {
           <p className="text-[10px] sm:text-[11px] text-ink-subtle font-mono truncate">
             {isMultiplayer ? (
               <span className="text-primary font-semibold">
-                Online • Room: {room?.code || roomIdParam}
+                {isRanked ? 'Ranked (30s / move)' : 'Online'} • Room: {room?.code || roomIdParam}
               </span>
+            ) : isBotMode ? (
+              `vs ${botProfile.displayName} • ${timeParam.replace('_', ' ')}`
+            ) : isRanked ? (
+              'Ranked • 30s per move'
             ) : (
-              `Pass & Play • ${timeParam.replace('_', ' ')}`
+              `Practice • ${timeParam.replace('_', ' ')}`
             )}
           </p>
         </div>
@@ -538,9 +716,10 @@ export function GamePage() {
       {/* =========================================================================
           DESKTOP GAME LAYOUT (3-Area Balanced Composition: Player | Board | Moves)
           ========================================================================= */}
-      <div className="hidden md:grid md:grid-cols-12 gap-8 items-start pt-2">
-        {/* LEFT AREA (Col 3): Player Information & Match Control */}
-        <div className="md:col-span-3 lg:col-span-3 flex flex-col space-y-4">
+      {isDesktop && (
+        <div className="grid md:grid-cols-12 gap-8 items-start pt-2">
+          {/* LEFT AREA (Col 3): Player Information & Match Control */}
+          <div className="md:col-span-3 lg:col-span-3 flex flex-col space-y-4">
           {/* Opponent Bar */}
           <div className="space-y-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-ink-subtle px-1">
@@ -549,7 +728,17 @@ export function GamePage() {
             <PlayerBar
               color={topColor}
               username={topName}
-              displayName={isMultiplayer ? (topColor === myColor ? 'Your Account' : 'Competitor') : 'Local Player'}
+              displayName={
+                isMultiplayer
+                  ? topColor === myColor
+                    ? 'Your Account'
+                    : 'Competitor'
+                  : isBotMode
+                    ? topColor === 'WHITE'
+                      ? 'Your Account'
+                      : 'AI Opponent'
+                    : 'Local Player'
+              }
               rating={topRating}
               isTurn={engineState.currentPlayer === topColor}
               unplacedCount={topColor === 'WHITE' ? unplacedWhite : unplacedBlack}
@@ -557,6 +746,7 @@ export function GamePage() {
                 topColor === 'WHITE' ? engineState.capturedPieces.WHITE : engineState.capturedPieces.BLACK
               }
               timeRemainingSeconds={topColor === 'WHITE' ? clocks.WHITE : clocks.BLACK}
+              isPerMoveTimer={isRanked}
               isOnline={topIsOnline}
               isCompact
             />
@@ -577,7 +767,17 @@ export function GamePage() {
             <PlayerBar
               color={bottomColor}
               username={bottomName}
-              displayName={isMultiplayer ? (bottomColor === myColor ? 'Your Account' : 'Competitor') : 'Local Player'}
+              displayName={
+                isMultiplayer
+                  ? bottomColor === myColor
+                    ? 'Your Account'
+                    : 'Competitor'
+                  : isBotMode
+                    ? bottomColor === 'WHITE'
+                      ? 'Your Account'
+                      : 'AI Opponent'
+                    : 'Local Player'
+              }
               rating={bottomRating}
               isTurn={engineState.currentPlayer === bottomColor}
               unplacedCount={bottomColor === 'WHITE' ? unplacedWhite : unplacedBlack}
@@ -585,6 +785,7 @@ export function GamePage() {
                 bottomColor === 'WHITE' ? engineState.capturedPieces.WHITE : engineState.capturedPieces.BLACK
               }
               timeRemainingSeconds={bottomColor === 'WHITE' ? clocks.WHITE : clocks.BLACK}
+              isPerMoveTimer={isRanked}
               isOnline={bottomIsOnline}
               isCompact
             />
@@ -707,17 +908,29 @@ export function GamePage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* =========================================================================
           MOBILE GAME LAYOUT (Board Dominant, Zero Desktop Clutter)
           Calibrated specifically for 320px, 360px, 375px, 390px, 430px screens
           ========================================================================= */}
-      <div className="md:hidden flex flex-col space-y-1.5 xs:space-y-2 pb-4 max-w-[440px] mx-auto w-full">
+      {!isDesktop && (
+        <div className="flex flex-col space-y-1.5 xs:space-y-2 pb-4 max-w-[540px] mx-auto w-full px-1">
         {/* 1. Opponent Bar */}
         <PlayerBar
           color={topColor}
           username={topName}
-          displayName={isMultiplayer ? (topColor === myColor ? 'Your Account' : 'Competitor') : 'Local Player'}
+          displayName={
+            isMultiplayer
+              ? topColor === myColor
+                ? 'Your Account'
+                : 'Competitor'
+              : isBotMode
+                ? topColor === 'WHITE'
+                  ? 'Your Account'
+                  : 'AI Opponent'
+                : 'Local Player'
+          }
           rating={topRating}
           isTurn={engineState.currentPlayer === topColor}
           unplacedCount={topColor === 'WHITE' ? unplacedWhite : unplacedBlack}
@@ -725,12 +938,13 @@ export function GamePage() {
             topColor === 'WHITE' ? engineState.capturedPieces.WHITE : engineState.capturedPieces.BLACK
           }
           timeRemainingSeconds={topColor === 'WHITE' ? clocks.WHITE : clocks.BLACK}
+          isPerMoveTimer={isRanked}
           isOnline={topIsOnline}
           isCompact
         />
 
         {/* 2. Dominant Large Board (Hero attraction with maximum screen presence) */}
-        <div className="py-0.5 flex justify-center">
+        <div className="py-0.5 flex justify-center w-full">
           <MillsBoard
             config={engineRef.current.config}
             state={displayedState}
@@ -750,7 +964,17 @@ export function GamePage() {
         <PlayerBar
           color={bottomColor}
           username={bottomName}
-          displayName={isMultiplayer ? (bottomColor === myColor ? 'Your Account' : 'Competitor') : 'Local Player'}
+          displayName={
+            isMultiplayer
+              ? bottomColor === myColor
+                ? 'Your Account'
+                : 'Competitor'
+              : isBotMode
+                ? bottomColor === 'WHITE'
+                  ? 'Your Account'
+                  : 'AI Opponent'
+                : 'Local Player'
+          }
           rating={bottomRating}
           isTurn={engineState.currentPlayer === bottomColor}
           unplacedCount={bottomColor === 'WHITE' ? unplacedWhite : unplacedBlack}
@@ -758,6 +982,7 @@ export function GamePage() {
             bottomColor === 'WHITE' ? engineState.capturedPieces.WHITE : engineState.capturedPieces.BLACK
           }
           timeRemainingSeconds={bottomColor === 'WHITE' ? clocks.WHITE : clocks.BLACK}
+          isPerMoveTimer={isRanked}
           isOnline={bottomIsOnline}
           isCompact
         />
@@ -811,6 +1036,7 @@ export function GamePage() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Mobile Bottom Sheet Drawer for Moves / Chat / Rules */}
       <Drawer
@@ -894,7 +1120,7 @@ export function GamePage() {
         onNewGame={() => navigate('/play')}
         onReturnHome={() => navigate('/')}
         userColor={isMultiplayer && myColor !== 'SPECTATOR' ? myColor : undefined}
-        isRated={isMultiplayer && room?.mode === 'RANKED'}
+        isRated={isMultiplayer && (room?.mode === 'RANKED' || isRanked)}
         ratingBefore={ratingBefore}
         ratingChange={userRatingDelta}
       />

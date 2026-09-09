@@ -11,7 +11,7 @@ ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS username_length_check;
 ALTER TABLE public.profiles ADD CONSTRAINT username_length_check CHECK (char_length(username) >= 3 AND char_length(username) <= 20);
 
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS username_format_check;
-ALTER TABLE public.profiles ADD CONSTRAINT username_format_check CHECK (username ~ '^[a-zA-Z0-9]+$');
+ALTER TABLE public.profiles ADD CONSTRAINT username_format_check CHECK (username ~ '^[a-zA-Z0-9]+$' OR username LIKE 'player_%');
 
 -- Case-insensitive unique index on LOWER(username)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username_lower ON public.profiles (LOWER(username));

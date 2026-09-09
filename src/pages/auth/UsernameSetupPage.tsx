@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { User, AlertCircle, Check, Sparkles } from 'lucide-react';
+import { User, AlertCircle, CheckCircle2, XCircle, Sparkles, Loader2 } from 'lucide-react';
+
+type AvailabilityState = 'idle' | 'checking' | 'available' | 'unavailable' | 'error';
 
 export function UsernameSetupPage() {
   const { user, profile, isUsernameSet, setUsername, checkUsernameAvailability } = useAuth();
@@ -13,8 +15,7 @@ export function UsernameSetupPage() {
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [availabilityState, setAvailabilityState] = useState<AvailabilityState>('idle');
 
   // If user is not authenticated, bounce to /login
   useEffect(() => {
@@ -41,21 +42,22 @@ export function UsernameSetupPage() {
   useEffect(() => {
     const trimmed = usernameInput.trim();
     setSuggestions([]);
-    setIsAvailable(null);
 
     if (!trimmed) {
       setError(null);
+      setAvailabilityState('idle');
       return;
     }
 
     const clientErr = validateClientSide(trimmed);
     if (clientErr) {
       setError(clientErr);
+      setAvailabilityState('error');
       return;
     }
 
     setError(null);
-    setIsValidating(true);
+    setAvailabilityState('checking');
 
     const timer = setTimeout(async () => {
       try {
@@ -63,17 +65,16 @@ export function UsernameSetupPage() {
         if (!res.available) {
           setError(res.error || 'Username already taken');
           setSuggestions(res.suggestions || []);
-          setIsAvailable(false);
+          setAvailabilityState('unavailable');
         } else {
           setError(null);
-          setIsAvailable(true);
+          setAvailabilityState('available');
         }
-      } catch {
-        // network hiccup, allow user to click continue to re-check
-      } finally {
-        setIsValidating(false);
+      } catch (err: any) {
+        setError(err.message || 'Error checking username availability.');
+        setAvailabilityState('error');
       }
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [usernameInput, checkUsernameAvailability]);
@@ -85,6 +86,11 @@ export function UsernameSetupPage() {
     const clientErr = validateClientSide(clean);
     if (clientErr) {
       setError(clientErr);
+      setAvailabilityState('error');
+      return;
+    }
+
+    if (availabilityState !== 'available') {
       return;
     }
 
@@ -95,6 +101,7 @@ export function UsernameSetupPage() {
       const res = await setUsername(clean);
       if (!res.success) {
         setError(res.error || 'Failed to set username. It may be taken.');
+        setAvailabilityState('unavailable');
         // If taken, fetch alternative suggestions
         const avail = await checkUsernameAvailability(clean);
         if (avail.suggestions) setSuggestions(avail.suggestions);
@@ -103,6 +110,7 @@ export function UsernameSetupPage() {
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
+      setAvailabilityState('error');
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +119,7 @@ export function UsernameSetupPage() {
   const handleApplySuggestion = (sug: string) => {
     setUsernameInput(sug);
     setError(null);
+    setSuggestions([]);
   };
 
   return (
@@ -161,12 +170,38 @@ export function UsernameSetupPage() {
                   maxLength={20}
                   className="rounded-2xl pr-10"
                 />
-                {isAvailable === true && !isValidating && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600">
-                    <Check className="w-4 h-4" />
-                  </div>
-                )}
+
+                {/* Trailing status icon */}
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                  {availabilityState === 'checking' && (
+                    <Loader2 className="w-4 h-4 text-ink-muted animate-spin" />
+                  )}
+                  {availabilityState === 'available' && (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  )}
+                  {availabilityState === 'unavailable' && (
+                    <XCircle className="w-4 h-4 text-alert-danger" />
+                  )}
+                  {availabilityState === 'error' && usernameInput.length >= 3 && (
+                    <AlertCircle className="w-4 h-4 text-alert-danger" />
+                  )}
+                </div>
               </div>
+
+              {/* Status feedback line */}
+              {availabilityState === 'checking' && (
+                <div className="flex items-center gap-1.5 text-xs text-ink-muted mt-1.5 animate-pulse">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-ink-muted" />
+                  <span>Checking availability...</span>
+                </div>
+              )}
+
+              {availabilityState === 'available' && (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 mt-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Username is available!</span>
+                </div>
+              )}
             </div>
 
             {/* Validation Rules Guidance */}
@@ -178,8 +213,8 @@ export function UsernameSetupPage() {
               <p>• Case-insensitive uniqueness</p>
             </div>
 
-            {/* Error Display */}
-            {error && (
+            {/* Error or Unavailable Alert Display */}
+            {(availabilityState === 'unavailable' || (availabilityState === 'error' && error)) && error && (
               <div className="p-3 rounded-2xl bg-alert-danger/10 border border-alert-danger/25 flex items-start gap-2 text-alert-danger">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span className="text-xs font-semibold leading-relaxed">{error}</span>
@@ -211,10 +246,22 @@ export function UsernameSetupPage() {
               type="submit"
               variant="primary"
               size="lg"
-              disabled={isLoading || isValidating || usernameInput.length < 3 || Boolean(error)}
+              disabled={
+                isLoading ||
+                availabilityState !== 'available' ||
+                usernameInput.trim().length < 3 ||
+                Boolean(error)
+              }
               className="w-full mt-3 font-black text-sm tracking-wider uppercase py-3.5 rounded-2xl shadow-soft"
             >
-              {isLoading ? 'SAVING USERNAME...' : 'CONTINUE'}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  SAVING USERNAME...
+                </span>
+              ) : (
+                'CONTINUE'
+              )}
             </Button>
           </form>
         </div>

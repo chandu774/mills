@@ -1,6 +1,6 @@
 export type GameVariant = 'MILLS_3' | 'MILLS_6' | 'MILLS_9';
 
-export type GameMode = 'CASUAL' | 'RANKED' | 'FRIEND' | 'PRIVATE' | 'LOCAL';
+export type GameMode = 'CASUAL' | 'RANKED' | 'BOT' | 'FRIEND' | 'PRIVATE' | 'LOCAL';
 
 export type TimeControl = 'UNTIMED' | '3_MIN' | '5_MIN' | '10_MIN';
 

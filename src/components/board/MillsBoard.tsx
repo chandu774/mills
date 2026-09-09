@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useId } from 'react';
 import { GameState, PlayerColor, VariantConfig } from '@/game/engine/types';
 import { Piece } from './Piece';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ export interface MillsBoardProps {
   isFlipped?: boolean;
   disabled?: boolean;
   className?: string;
+  boardId?: string;
 }
 
 export function MillsBoard({
@@ -21,7 +22,11 @@ export function MillsBoard({
   isFlipped = false,
   disabled = false,
   className,
+  boardId: propBoardId,
 }: MillsBoardProps) {
+  const reactId = useId().replace(/:/g, '');
+  const id = propBoardId || reactId;
+
   // Transform coordinates if board is flipped (for Black perspective)
   const getPointCoord = (index: number) => {
     const raw = config.coordinates[index];
@@ -158,17 +163,23 @@ export function MillsBoard({
   const hitRadius = config.variant === 'MILLS_9' ? 5.4 : config.variant === 'MILLS_6' ? 6.2 : 7.0;
 
   return (
-    <div className={cn("relative w-full max-w-[min(100vw-16px,440px)] md:max-w-[540px] aspect-square select-none mx-auto", className)}>
+    <div className={cn("relative w-full max-w-[540px] aspect-square select-none mx-auto", className)}>
       {/* Outer physical wood board container with soft natural shadow */}
-      <div className="w-full h-full p-2 sm:p-3 rounded-[24px] sm:rounded-[38px] bg-gradient-to-b from-[#7A4B29] via-[#61391D] to-[#472712] shadow-[0_12px_36px_rgba(25,12,5,0.45),0_3px_10px_rgba(0,0,0,0.3)] border-[4px] sm:border-[7px] border-[#532E16]">
+      <div className="w-full h-full p-3 rounded-[38px] bg-gradient-to-b from-[#7A4B29] via-[#61391D] to-[#472712] shadow-[0_12px_36px_rgba(25,12,5,0.45),0_3px_10px_rgba(0,0,0,0.3)] border-[7px] border-[#532E16]">
         <svg
           viewBox="0 0 100 100"
-          className="w-full h-full rounded-[16px] sm:rounded-[26px] overflow-hidden"
+          className="w-full h-full rounded-[26px] overflow-hidden"
           role="grid"
           aria-label={`${config.name} Board`}
         >
           <defs>
             {/* Natural Teak Wood Surface Radial Gradient */}
+            <radialGradient id={`teakWoodGradient-${id}`} cx="48%" cy="44%" r="72%">
+              <stop offset="0%" stopColor="#A87444" />
+              <stop offset="35%" stopColor="#925E31" />
+              <stop offset="70%" stopColor="#794820" />
+              <stop offset="100%" stopColor="#5E3314" />
+            </radialGradient>
             <radialGradient id="teakWoodGradient" cx="48%" cy="44%" r="72%">
               <stop offset="0%" stopColor="#A87444" />
               <stop offset="35%" stopColor="#925E31" />
@@ -177,13 +188,24 @@ export function MillsBoard({
             </radialGradient>
 
             {/* Top-to-Bottom Subtle Wood Lighting Gradient */}
+            <linearGradient id={`teakPlankLighting-${id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255, 240, 215, 0.08)" />
+              <stop offset="50%" stopColor="rgba(0, 0, 0, 0)" />
+              <stop offset="100%" stopColor="rgba(30, 12, 4, 0.14)" />
+            </linearGradient>
             <linearGradient id="teakPlankLighting" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="rgba(255, 240, 215, 0.08)" />
               <stop offset="50%" stopColor="rgba(0, 0, 0, 0)" />
               <stop offset="100%" stopColor="rgba(30, 12, 4, 0.14)" />
             </linearGradient>
 
-            {/* Clean Vector Teak Wood Grain Pattern (Zero GPU Shader Rainbow Artifacts) */}
+            {/* Clean Vector Teak Wood Grain Pattern */}
+            <pattern id={`teakGrainPattern-${id}`} width="18" height="100" patternUnits="userSpaceOnUse">
+              <line x1="2.2" y1="0" x2="2.6" y2="100" stroke="#3A1C08" strokeWidth="0.55" opacity="0.07" />
+              <line x1="6.0" y1="0" x2="5.6" y2="100" stroke="#DDB686" strokeWidth="0.4" opacity="0.07" />
+              <line x1="10.5" y1="0" x2="10.9" y2="100" stroke="#3A1C08" strokeWidth="0.65" opacity="0.06" />
+              <line x1="15.2" y1="0" x2="14.8" y2="100" stroke="#DDB686" strokeWidth="0.35" opacity="0.06" />
+            </pattern>
             <pattern id="teakGrainPattern" width="18" height="100" patternUnits="userSpaceOnUse">
               <line x1="2.2" y1="0" x2="2.6" y2="100" stroke="#3A1C08" strokeWidth="0.55" opacity="0.07" />
               <line x1="6.0" y1="0" x2="5.6" y2="100" stroke="#DDB686" strokeWidth="0.4" opacity="0.07" />
@@ -192,6 +214,12 @@ export function MillsBoard({
             </pattern>
 
             {/* Radial gradient for Warm Ivory Pieces */}
+            <radialGradient id={`ivoryPieceGradient-${id}`} cx="32%" cy="28%" r="68%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="35%" stopColor="#F9F5EC" />
+              <stop offset="70%" stopColor="#E6D8C4" />
+              <stop offset="100%" stopColor="#C4B39A" />
+            </radialGradient>
             <radialGradient id="ivoryPieceGradient" cx="32%" cy="28%" r="68%">
               <stop offset="0%" stopColor="#FFFFFF" />
               <stop offset="35%" stopColor="#F9F5EC" />
@@ -200,6 +228,12 @@ export function MillsBoard({
             </radialGradient>
 
             {/* Radial gradient for Dark Walnut Pieces */}
+            <radialGradient id={`walnutPieceGradient-${id}`} cx="32%" cy="28%" r="68%">
+              <stop offset="0%" stopColor="#4D3320" />
+              <stop offset="38%" stopColor="#352013" />
+              <stop offset="75%" stopColor="#221209" />
+              <stop offset="100%" stopColor="#140803" />
+            </radialGradient>
             <radialGradient id="walnutPieceGradient" cx="32%" cy="28%" r="68%">
               <stop offset="0%" stopColor="#4D3320" />
               <stop offset="38%" stopColor="#352013" />
@@ -208,6 +242,9 @@ export function MillsBoard({
             </radialGradient>
 
             {/* Soft Piece Contact Shadow Blur */}
+            <filter id={`pieceShadowBlur-${id}`} x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.85" />
+            </filter>
             <filter id="pieceShadowBlur" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="0.85" />
             </filter>
@@ -219,7 +256,7 @@ export function MillsBoard({
             y="0"
             width="100"
             height="100"
-            fill="url(#teakWoodGradient)"
+            fill={`url(#teakWoodGradient-${id})`}
           />
 
           {/* Natural Subtle Teak Grain Striations */}
@@ -228,7 +265,7 @@ export function MillsBoard({
             y="0"
             width="100"
             height="100"
-            fill="url(#teakGrainPattern)"
+            fill={`url(#teakGrainPattern-${id})`}
           />
 
           {/* Ambient Lighting Plank Sheen */}
@@ -237,7 +274,7 @@ export function MillsBoard({
             y="0"
             width="100"
             height="100"
-            fill="url(#teakPlankLighting)"
+            fill={`url(#teakPlankLighting-${id})`}
           />
 
           {/* Beveled Routed Inner Playing Field Border */}
@@ -396,6 +433,7 @@ export function MillsBoard({
                     isEligibleCapture={isEligibleCapture}
                     isMillPiece={inActiveMill}
                     isLastMove={isLastMove}
+                    boardId={id}
                     onClick={() => !disabled && onPointClick(pointIndex)}
                   />
                 )}
@@ -406,7 +444,9 @@ export function MillsBoard({
                   cy={coord.y}
                   r={hitRadius}
                   fill="transparent"
+                  pointerEvents="auto"
                   className="cursor-pointer"
+                  data-point={pointIndex}
                   onClick={() => !disabled && onPointClick(pointIndex)}
                 />
               </g>

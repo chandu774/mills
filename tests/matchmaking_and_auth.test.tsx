@@ -77,7 +77,7 @@ describe('MatchmakingModal Component', () => {
     expect(screen.getByText('FINDING OPPONENT')).toBeInTheDocument();
     expect(screen.getByText(/Searching for a closely rated opponent/i)).toBeInTheDocument();
     expect(screen.getByText(/9-Piece Men's Morris/i)).toBeInTheDocument();
-    expect(screen.getByText(/5 min/i)).toBeInTheDocument();
+    expect(screen.getByText(/30s \/ move/i)).toBeInTheDocument();
 
     const cancelBtn = screen.getByRole('button', { name: /CANCEL/i });
     expect(cancelBtn).toBeInTheDocument();

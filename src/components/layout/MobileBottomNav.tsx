@@ -1,14 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Play, Trophy, Users, User } from 'lucide-react';
+import { Home, Trophy, BarChart2, Users, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MobileBottomNav() {
   const navItems = [
-    { to: '/', label: 'Home', icon: Home, isPrimary: false },
-    { to: '/play', label: 'Play', icon: Play, isPrimary: true },
-    { to: '/tournaments', label: 'Tournaments', icon: Trophy, isPrimary: false },
-    { to: '/friends', label: 'Friends', icon: Users, isPrimary: false },
-    { to: '/profile', label: 'Profile', icon: User, isPrimary: false },
+    { to: '/', label: 'Home', icon: Home },
+    { to: '/tournaments', label: 'Tournaments', icon: Trophy },
+    { to: '/leaderboard', label: 'Ranks', icon: BarChart2 },
+    { to: '/friends', label: 'Friends', icon: Users },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
@@ -16,27 +16,6 @@ export function MobileBottomNav() {
       <div className="flex items-center justify-around px-1 py-1.5 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-
-          if (item.isPrimary) {
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    "flex flex-col items-center justify-center px-3 py-0.5 transition-transform active:scale-95",
-                    isActive ? "scale-105" : ""
-                  )
-                }
-              >
-                <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-md border-2 border-white p-2 transition-all hover:bg-primary-hover">
-                  <Play className="h-5 w-5 fill-current ml-0.5" />
-                </div>
-                <span className="text-[10px] font-extrabold text-primary mt-0.5 tracking-tight">Play</span>
-              </NavLink>
-            );
-          }
-
           return (
             <NavLink
               key={item.to}

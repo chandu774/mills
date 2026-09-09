@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
@@ -22,6 +22,24 @@ export function LoginPage() {
   const [forgotMsg, setForgotMsg] = useState<string | null>(null);
   const [forgotError, setForgotError] = useState<string | null>(null);
   const [isForgotLoading, setIsForgotLoading] = useState(false);
+
+  // Capture any OAuth error returned in URL parameters
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        const oauthErr = params.get('error_description') || params.get('error') || hashParams.get('error_description') || hashParams.get('error');
+        if (oauthErr) {
+          setError(decodeURIComponent(oauthErr.replace(/\+/g, ' ')));
+          const cleanPath = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanPath);
+        }
+      } catch {
+        // Ignore parsing errors
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

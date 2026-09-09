@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Play, Trophy, BarChart2, Users, BookOpen, User, Bell, LogIn, LogOut } from 'lucide-react';
+import { Home, Trophy, BarChart2, Users, BookOpen, User, Bell, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,7 +14,6 @@ export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotifica
   const { user, profile, ratings, signOut } = useAuth();
   const navItems = [
     { to: '/', label: 'Home', icon: Home },
-    { to: '/play', label: 'Play', icon: Play },
     { to: '/tournaments', label: 'Tournaments', icon: Trophy },
     { to: '/leaderboard', label: 'Leaderboards', icon: BarChart2 },
     { to: '/friends', label: 'Friends', icon: Users },
@@ -58,18 +57,8 @@ export function DesktopSidebar({ onOpenNotifications, onOpenAuth, unreadNotifica
         </button>
       </div>
 
-      {/* Primary Call To Action */}
-      <div className="p-4">
-        <NavLink to="/play">
-          <Button variant="primary" size="lg" className="w-full gap-2.5 text-base font-extrabold shadow-soft">
-            <Play className="h-5 w-5 fill-current" />
-            PLAY NOW
-          </Button>
-        </NavLink>
-      </div>
-
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (

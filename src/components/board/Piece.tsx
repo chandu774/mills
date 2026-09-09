@@ -9,6 +9,7 @@ export interface PieceProps {
   isEligibleCapture?: boolean;
   isMillPiece?: boolean;
   isLastMove?: boolean;
+  boardId?: string;
   onClick?: () => void;
 }
 
@@ -21,6 +22,7 @@ export function Piece({
   isEligibleCapture = false,
   isMillPiece = false,
   isLastMove = false,
+  boardId,
   onClick,
 }: PieceProps) {
   const isWhite = color === 'WHITE';
@@ -113,7 +115,7 @@ export function Piece({
         rx={radius * 1.04}
         ry={radius * 0.94}
         fill={isWhite ? 'rgba(28, 14, 6, 0.4)' : 'rgba(0, 0, 0, 0.55)'}
-        filter="url(#pieceShadowBlur)"
+        filter={boardId ? `url(#pieceShadowBlur-${boardId})` : 'url(#pieceShadowBlur)'}
       />
 
       {/* Main Physical Turned Wood Piece Body */}
@@ -121,7 +123,15 @@ export function Piece({
         cx={cx}
         cy={cy}
         r={radius}
-        fill={isWhite ? 'url(#ivoryPieceGradient)' : 'url(#walnutPieceGradient)'}
+        fill={
+          boardId
+            ? isWhite
+              ? `url(#ivoryPieceGradient-${boardId})`
+              : `url(#walnutPieceGradient-${boardId})`
+            : isWhite
+              ? 'url(#ivoryPieceGradient)'
+              : 'url(#walnutPieceGradient)'
+        }
         stroke={isWhite ? '#BFAFA0' : '#140803'}
         strokeWidth="0.8"
         className="transition-transform group-hover:scale-105"

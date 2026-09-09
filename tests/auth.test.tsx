@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { authService } from '@/services/auth/authService';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { AuthProvider } from '@/context/AuthContext';
+import { getAuthRedirectUrl, getCleanUrlWithoutAuthParams } from '@/lib/auth/redirect';
 import fs from 'fs';
 import path from 'path';
 
@@ -136,3 +137,116 @@ describe('Phase 4: Supabase PostgreSQL Schema & Security Audit', () => {
     expect(sqlContent).toContain('CREATE OR REPLACE FUNCTION public.update_ratings_after_game');
   });
 });
+
+describe('Phase 4: Username Setup Migration & Security Specifications', () => {
+  const fixMigrationPath = path.resolve(
+    __dirname,
+    '../supabase/migrations/20260908183000_fix_username_setup_rpcs.sql'
+  );
+  const fixSqlContent = fs.readFileSync(fixMigrationPath, 'utf8');
+
+  it('includes is_username_set column addition on public.profiles', () => {
+    expect(fixSqlContent).toContain('ADD COLUMN IF NOT EXISTS is_username_set BOOLEAN NOT NULL DEFAULT false;');
+  });
+
+  it('includes case-insensitive unique index on LOWER(username)', () => {
+    expect(fixSqlContent).toContain('CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username_lower');
+    expect(fixSqlContent).toContain('ON public.profiles (LOWER(username))');
+  });
+
+  it('defines check_username_available RPC function with 3-20 char alphanumeric rules', () => {
+    expect(fixSqlContent).toContain('CREATE OR REPLACE FUNCTION public.check_username_available(p_username TEXT)');
+    expect(fixSqlContent).toContain('char_length(v_clean) < 3 OR char_length(v_clean) > 20');
+    expect(fixSqlContent).toContain("v_clean ~ '^[a-zA-Z0-9]+$'");
+    expect(fixSqlContent).toContain('LOWER(username) = LOWER(v_clean)');
+  });
+
+  it('defines set_user_username RPC enforcing auth.uid() without trusting client ID', () => {
+    expect(fixSqlContent).toContain('CREATE OR REPLACE FUNCTION public.set_user_username(p_username TEXT)');
+    expect(fixSqlContent).toContain('v_user_id := auth.uid();');
+    expect(fixSqlContent).toContain('pg_advisory_xact_lock');
+    expect(fixSqlContent).toContain('UPDATE public.profiles');
+    expect(fixSqlContent).toContain('auth.users');
+  });
+
+  it('enforces username client-side validation rules correctly', async () => {
+    // Under 3 chars
+    const shortRes = await authService.checkUsernameAvailability('ab');
+    expect(shortRes.available).toBe(false);
+    expect(shortRes.error).toContain('between 3 and 20');
+
+    // Over 20 chars
+    const longRes = await authService.checkUsernameAvailability('a'.repeat(21));
+    expect(longRes.available).toBe(false);
+    expect(longRes.error).toContain('between 3 and 20');
+
+    // Invalid symbols
+    const symbolRes = await authService.checkUsernameAvailability('alex_smith!');
+    expect(symbolRes.available).toBe(false);
+    expect(symbolRes.error).toContain('Only letters (A-Z, a-z) and numbers (0-9)');
+
+    // Spaces
+    const spaceRes = await authService.checkUsernameAvailability('alex smith');
+    expect(spaceRes.available).toBe(false);
+    expect(spaceRes.error).toContain('Only letters (A-Z, a-z) and numbers (0-9)');
+  });
+});
+
+describe('Phase 4: Dynamic OAuth Redirect URL Resolution for Mobile & Desktop', () => {
+  it('resolves dynamic origin for localhost development', () => {
+    // Mock window.location for laptop localhost on port 3000
+    const originalLocation = window.location;
+    delete (window as any).location;
+    (window as any).location = new URL('http://localhost:3000/login');
+
+    const url = getAuthRedirectUrl('/');
+    expect(url).toBe('http://localhost:3000/');
+
+    const customPathUrl = getAuthRedirectUrl('/play');
+    expect(customPathUrl).toBe('http://localhost:3000/play');
+
+    (window as any).location = originalLocation;
+  });
+
+  it('resolves dynamic origin for forwarded mobile tunnel (e.g. devtunnels.ms)', () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    (window as any).location = new URL('https://fv59b1k8-5173.inc1.devtunnels.ms/login');
+
+    const url = getAuthRedirectUrl('/');
+    expect(url).toBe('https://fv59b1k8-5173.inc1.devtunnels.ms/');
+
+    (window as any).location = originalLocation;
+  });
+
+  it('resolves dynamic origin for other tunnel providers (e.g. ngrok, cloudflare, local IP)', () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+
+    // ngrok
+    (window as any).location = new URL('https://mills-app.ngrok-free.app/');
+    expect(getAuthRedirectUrl('/')).toBe('https://mills-app.ngrok-free.app/');
+
+    // Local WiFi IP
+    (window as any).location = new URL('http://192.168.1.100:5173/');
+    expect(getAuthRedirectUrl('/')).toBe('http://192.168.1.100:5173/');
+
+    // Production domain
+    (window as any).location = new URL('https://mills.app/login');
+    expect(getAuthRedirectUrl('/')).toBe('https://mills.app/');
+
+    (window as any).location = originalLocation;
+  });
+
+  it('cleans OAuth one-time code and error query parameters from URL', () => {
+    const dirtyUrl = 'https://fv59b1k8-5173.inc1.devtunnels.ms/?code=secret_code_123&state=my_state';
+    const cleaned = getCleanUrlWithoutAuthParams(dirtyUrl);
+    expect(cleaned).toBe('/');
+
+    const dirtyErrorUrl = 'https://mills.app/login?error=access_denied&error_description=User+cancelled';
+    const cleanedError = getCleanUrlWithoutAuthParams(dirtyErrorUrl);
+    expect(cleanedError).toBe('/login');
+  });
+});
+
+

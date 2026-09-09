@@ -45,6 +45,8 @@ export function formatMode(mode: GameMode): string {
   switch (mode) {
     case 'RANKED':
       return 'Ranked';
+    case 'BOT':
+      return 'Play with Bot';
     case 'CASUAL':
       return 'Casual';
     case 'FRIEND':
@@ -53,6 +55,8 @@ export function formatMode(mode: GameMode): string {
       return 'Private Room';
     case 'LOCAL':
       return 'Pass & Play';
+    default:
+      return mode;
   }
 }
 

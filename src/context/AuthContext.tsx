@@ -17,7 +17,7 @@ interface AuthContextType {
   isUsernameSet: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, username?: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
-  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: (returnPath?: string) => Promise<{ success: boolean; error?: string }>;
   checkUsernameAvailability: (username: string) => Promise<{ available: boolean; error?: string; suggestions?: string[] }>;
   setUsername: (username: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -62,21 +62,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Helper to clean one-time OAuth callback parameters from the browser URL bar
+    const cleanupOAuthUrl = () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const url = new URL(window.location.href);
+          if (url.searchParams.has('code') || url.searchParams.has('state') || url.hash.includes('access_token')) {
+            url.searchParams.delete('code');
+            url.searchParams.delete('state');
+            const cleanPath = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '');
+            window.history.replaceState({}, document.title, cleanPath);
+          }
+        } catch {
+          // Ignore URL parsing errors
+        }
+      }
+    };
+
     // Check active session from Supabase
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.warn('[AuthContext] Session init notice:', error.message);
+      }
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email || '' });
-        loadUserProfile(session.user.id).finally(() => setIsLoading(false));
+        loadUserProfile(session.user.id).finally(() => {
+          cleanupOAuthUrl();
+          setIsLoading(false);
+        });
       } else {
         setIsLoading(false);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email || '' });
-        loadUserProfile(session.user.id).finally(() => setIsLoading(false));
-      } else {
+        await loadUserProfile(session.user.id);
+        cleanupOAuthUrl();
+        setIsLoading(false);
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
         setIsLoading(false);
@@ -112,8 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const signInWithGoogle = async () => {
-    const res = await authService.signInWithGoogle();
+  const signInWithGoogle = async (returnPath: string = '/') => {
+    const res = await authService.signInWithGoogle(returnPath);
     if (res.error) {
       return { success: false, error: res.error };
     }

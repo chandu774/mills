@@ -14,6 +14,7 @@ export interface PlayerBarProps {
   unplacedCount: number;
   capturedCount: number;
   timeRemainingSeconds?: number;
+  isPerMoveTimer?: boolean;
   isCompact?: boolean;
   isOnline?: boolean;
 }
@@ -28,18 +29,24 @@ export function PlayerBar({
   unplacedCount,
   capturedCount,
   timeRemainingSeconds,
+  isPerMoveTimer = false,
   isCompact = false,
   isOnline,
 }: PlayerBarProps) {
   const isWhite = color === 'WHITE';
 
   const formatClock = (seconds: number) => {
+    if (isPerMoveTimer) {
+      return `${seconds}s`;
+    }
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const isLowTime = timeRemainingSeconds !== undefined && timeRemainingSeconds <= 30;
+  const isLowTime = isPerMoveTimer
+    ? timeRemainingSeconds !== undefined && timeRemainingSeconds <= 8
+    : timeRemainingSeconds !== undefined && timeRemainingSeconds <= 30;
 
   return (
     <div
@@ -118,15 +125,16 @@ export function PlayerBar({
       {timeRemainingSeconds !== undefined && (
         <div
           className={cn(
-            "flex items-center gap-1 font-mono px-2 sm:px-2.5 py-1 rounded-xl border font-bold text-xs sm:text-sm min-w-[60px] sm:min-w-[74px] justify-center transition-all shrink-0",
+            "flex items-center gap-1 font-mono px-2 sm:px-2.5 py-1 rounded-xl border font-bold text-xs sm:text-sm min-w-[56px] sm:min-w-[68px] justify-center transition-all shrink-0 select-none",
             isTurn
               ? isLowTime
-                ? "bg-red-50 text-alert-danger border-alert-danger/40 animate-pulse"
-                : "bg-white text-ink border-primary/30 shadow-2xs"
+                ? "bg-red-50 text-alert-danger border-alert-danger/60 animate-pulse ring-1 ring-alert-danger/30"
+                : "bg-white text-ink border-primary/40 shadow-2xs ring-1 ring-primary/20"
               : "bg-background-elevated text-ink-subtle border-background-border/60"
           )}
+          title={isPerMoveTimer ? `${timeRemainingSeconds}s remaining for this turn` : `${timeRemainingSeconds}s remaining`}
         >
-          <Clock className="h-3 w-3 opacity-60 shrink-0" />
+          <Clock className={cn("h-3 w-3 shrink-0", isTurn ? (isLowTime ? "text-alert-danger" : "text-primary") : "opacity-60")} />
           <span>{formatClock(timeRemainingSeconds)}</span>
         </div>
       )}

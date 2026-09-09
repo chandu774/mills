@@ -12,9 +12,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export function ProfilePage() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [activeHistoryTab, setActiveHistoryTab] = useState('all');
   const [matchHistory, setMatchHistory] = useState<GameRecord[]>([]);
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   // Active or Fallback profile (never hardcoded fake user)
   const currentProfile: UserProfile = profile || {

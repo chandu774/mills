@@ -46,6 +46,7 @@ export type MultiplayerPayload =
       fen: string;
       clocks?: { WHITE?: number; BLACK?: number };
       moveNumber: number;
+      turnStartedAt?: number;
     }
   | {
       type: 'RESIGN';

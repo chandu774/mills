@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { RootLayout } from '@/layouts/RootLayout';
 import { HomePage } from '@/pages/home/HomePage';
-import { PlayPage } from '@/pages/play/PlayPage';
+import { RankedConfigPage } from '@/pages/play/RankedConfigPage';
+import { BotsConfigPage } from '@/pages/play/BotsConfigPage';
+import { FriendsConfigPage } from '@/pages/play/FriendsConfigPage';
 import { TournamentsPage } from '@/pages/tournaments/TournamentsPage';
 import { LeaderboardPage } from '@/pages/leaderboard/LeaderboardPage';
 import { FriendsPage } from '@/pages/friends/FriendsPage';
@@ -65,7 +67,10 @@ function AppRoutes() {
       <Route path="/username-setup" element={<Navigate to="/" replace />} />
       <Route path="/" element={<RootLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="play" element={<PlayPage />} />
+        <Route path="play" element={<Navigate to="/" replace />} />
+        <Route path="play/ranked" element={<RankedConfigPage />} />
+        <Route path="play/bots" element={<BotsConfigPage />} />
+        <Route path="play/friends" element={<FriendsConfigPage />} />
         <Route path="game" element={<GamePage />} />
         <Route path="tournaments" element={<TournamentsPage />} />
         <Route path="leaderboard" element={<LeaderboardPage />} />
