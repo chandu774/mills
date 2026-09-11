@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { BotDifficulty, getBestBotMove, getBotProfile } from '@/game/ai/botEngine';
 import { Button } from '@/components/ui/Button';
+import { soundService } from '@/services/audio/soundService';
 
 export function GamePage() {
   const [searchParams] = useSearchParams();
@@ -291,6 +292,7 @@ export function GamePage() {
 
       const result = engineRef.current.makeMove(botMove);
       if (result.success) {
+        soundService.playForMoveResult(botMove, result);
         setEngineState(result.state);
         setSelectedPoint(null);
         if (isRanked) {
@@ -306,6 +308,7 @@ export function GamePage() {
             if (captureMove) {
               const capResult = engineRef.current.makeMove(captureMove);
               if (capResult.success) {
+                soundService.playForMoveResult(captureMove, capResult);
                 setEngineState(capResult.state);
                 if (isRanked) {
                   turnStartTimeRef.current = Date.now();
@@ -346,6 +349,7 @@ export function GamePage() {
 
     const applyMoveResult = (result: ReturnType<typeof engine.makeMove>, move: any) => {
       if (result.success) {
+        soundService.playForMoveResult(move, result);
         setEngineState(result.state);
         setSelectedPoint(null);
         if (isRanked) {

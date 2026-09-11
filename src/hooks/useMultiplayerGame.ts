@@ -4,6 +4,7 @@ import { RealtimeGameChannel } from '@/services/games/realtimeChannel';
 import { gameService } from '@/services/games/gameService';
 import { GameEngine } from '@/game/engine/GameEngine';
 import { PlayerColor, PlayerMove, GameState } from '@/game/engine/types';
+import { soundService } from '@/services/audio/soundService';
 
 export interface GameChatMessage {
   id: string;
@@ -190,6 +191,7 @@ export function useMultiplayerGame({
           const currentEng = engineRef.current;
           const res = currentEng.makeMove(payload.move);
           if (res.success) {
+            soundService.playForMoveResult(payload.move, res);
             onEngineStateUpdate(res.state);
             if (['FINISHED', 'DRAW', 'RESIGNED', 'TIMEOUT', 'ABANDONED'].includes(res.state.status)) {
               completeGameRef.current(res.state.winner, res.state.winReason || 'Game finished.');

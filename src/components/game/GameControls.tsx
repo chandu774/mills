@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Flag, Handshake, ArrowUpDown, Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import { PlayerColor } from '@/game/engine/types';
+import { useSound } from '@/hooks/useSound';
 
 export interface GameControlsProps {
   onResign: (player: PlayerColor) => void;
@@ -28,7 +29,7 @@ export function GameControls({
   myColor,
 }: GameControlsProps) {
   const [showResignModal, setShowResignModal] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const { isMuted, toggleMute } = useSound();
 
   return (
     <div className={className}>
@@ -46,7 +47,7 @@ export function GameControls({
 
           {/* Sound Mute Toggle */}
           <button
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={toggleMute}
             aria-label={isMuted ? "Unmute sound" : "Mute sound"}
             title={isMuted ? "Unmute" : "Mute"}
             className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-ink-muted hover:text-ink hover:bg-background-elevated active:scale-95 transition-all cursor-pointer"
