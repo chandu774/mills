@@ -29,7 +29,8 @@ export class GameService {
       preferredColor?: PlayerColor;
     };
   }): Promise<GameRoom> {
-    const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    // `games.id` is a UUID in Supabase, so keep the local room id database-compatible.
+    const roomId = crypto.randomUUID();
     const code = this.generateRoomCode();
     const hostColor = params.hostPlayer.preferredColor || 'WHITE';
 
@@ -60,18 +61,30 @@ export class GameService {
     // Save to Supabase if configured
     if (isSupabaseConfigured() && supabase) {
       try {
+        const databaseMode = ['CASUAL', 'RANKED', 'FRIEND', 'PRIVATE'].includes(params.mode)
+          ? params.mode
+          : 'CASUAL';
         const { error } = await supabase.from('games').insert({
           id: roomId,
           variant: params.variant,
+          mode: databaseMode,
           time_control: params.timeControl,
-          is_rated: params.mode === 'RANKED',
           status: 'WAITING',
           current_fen: '',
           moves_count: 0,
           white_player_id: hostColor === 'WHITE' ? fullHost.id : null,
           black_player_id: hostColor === 'BLACK' ? fullHost.id : null,
         });
-        if (error) console.warn('[GameService] Supabase room insert notice:', error.message);
+        if (error) {
+          console.warn('[GameService] Supabase room insert notice:', error.message);
+        } else {
+          const { error: playerError } = await supabase.from('game_players').insert({
+            game_id: roomId,
+            user_id: fullHost.id,
+            color: hostColor,
+          });
+          if (playerError) console.warn('[GameService] Supabase host player insert notice:', playerError.message);
+        }
       } catch (err) {
         console.warn('[GameService] Supabase unavailable:', err);
       }
@@ -107,7 +120,7 @@ export class GameService {
             code: data.id.substring(0, 6).toUpperCase(),
             variant: data.variant,
             timeControl: data.time_control,
-            mode: data.is_rated ? 'RANKED' : 'CASUAL',
+            mode: data.mode,
             status: data.status,
             hostPlayer: {
               id: hostInfo?.id || 'host',
@@ -169,7 +182,7 @@ export class GameService {
     }
 
     // Prevent joining against yourself unless in dev demo mode
-    if (room.hostPlayer.id === guestPlayer.id && process.env.NODE_ENV === 'production') {
+    if (room.hostPlayer.id === guestPlayer.id && import.meta.env.PROD) {
       return { success: false, error: 'Cannot join your own room as opponent.' };
     }
 
@@ -191,14 +204,26 @@ export class GameService {
 
     if (isSupabaseConfigured() && supabase) {
       try {
-        await supabase
+        const { error: playerError } = await supabase.from('game_players').insert({
+          game_id: room.id,
+          user_id: fullGuest.id,
+          color: guestColor,
+        });
+        if (playerError) {
+          console.warn('[GameService] Supabase guest player insert notice:', playerError.message);
+        }
+
+        const { error } = await supabase
           .from('games')
           .update({
-            status: 'ACTIVE',
+            // ACTIVE is a client-only room state. The database constraint uses
+            // PLACING for a game that has just started.
+            status: 'PLACING',
             started_at: new Date().toISOString(),
             [guestColor === 'WHITE' ? 'white_player_id' : 'black_player_id']: fullGuest.id,
           })
           .eq('id', room.id);
+        if (error) console.warn('[GameService] Supabase room join update notice:', error.message);
       } catch (err) {
         console.warn('[GameService] Failed updating joined player to Supabase:', err);
       }
@@ -227,7 +252,7 @@ export class GameService {
 
     if (isSupabaseConfigured() && supabase) {
       try {
-        await supabase.from('game_moves').insert({
+        const { error: moveError } = await supabase.from('game_moves').insert({
           game_id: params.roomId,
           move_number: params.moveNumber,
           player_color: params.playerColor,
@@ -236,16 +261,18 @@ export class GameService {
           to_point: 'to' in params.move ? params.move.to : null,
           captured_point: 'capturedPoint' in params.move ? params.move.capturedPoint : null,
           notation: params.notation,
-          fen_after: params.fen,
+          board_snapshot: { fen: params.fen },
         });
+        if (moveError) console.warn('[GameService] Supabase move insert notice:', moveError.message);
 
-        await supabase
+        const { error: gameError } = await supabase
           .from('games')
           .update({
             current_fen: params.fen,
             moves_count: params.moveNumber,
           })
           .eq('id', params.roomId);
+        if (gameError) console.warn('[GameService] Supabase move update notice:', gameError.message);
       } catch (err) {
         console.warn('[GameService] Error recording move to Supabase:', err);
       }

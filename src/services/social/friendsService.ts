@@ -165,7 +165,7 @@ export const friendsService = {
       const { data: ratingsData } = await supabase
         .from('ratings')
         .select('user_id, variant, rating')
-        .in('id', friendIds);
+        .in('user_id', friendIds);
 
       const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
 

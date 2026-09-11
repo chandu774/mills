@@ -52,7 +52,7 @@ export function ProfilePage() {
       try {
         const { data, error } = await supabase
           .from('games')
-          .select('id, variant, time_control, is_rated, status, winner_id, win_reason, created_at, started_at, ended_at, moves_count, white:white_player_id(id, username, display_name), black:black_player_id(id, username, display_name)')
+          .select('id, variant, mode, time_control, status, winner_id, win_reason, created_at, started_at, ended_at, moves_count, white:white_player_id(id, username, display_name), black:black_player_id(id, username, display_name)')
           .or(`white_player_id.eq.${user.id},black_player_id.eq.${user.id}`)
           .eq('status', 'FINISHED')
           .order('ended_at', { ascending: false })
@@ -72,7 +72,7 @@ export function ProfilePage() {
               id: g.id,
               opponentUsername: opponent?.username || opponent?.display_name || 'Opponent',
               variant: g.variant,
-              mode: g.is_rated ? 'RANKED' : 'CASUAL',
+              mode: g.mode,
               timeControl: g.time_control,
               result: didWin ? 'WIN' : isDraw ? 'DRAW' : 'LOSS',
               ratingChange: didWin ? 16 : isDraw ? 0 : -16,
